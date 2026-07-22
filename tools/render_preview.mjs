@@ -222,7 +222,7 @@ try {
     });
     const minimumHeight = viewportWidth <= 960 ? 38 : 40;
     if (structure.tag !== "BUTTON" || structure.pressed !== "true"
-      || !/tooltip/i.test(structure.label ?? "") || !/ON$/.test(structure.text)
+      || !/help/i.test(structure.label ?? "") || !/ON$/.test(structure.text)
       || structure.endpoint || structure.tooltipOwner || structure.box.height + .5 < minimumHeight
       || !structure.topbar || structure.box.left < structure.topbar.left - 1
       || structure.box.right > structure.topbar.right + 1

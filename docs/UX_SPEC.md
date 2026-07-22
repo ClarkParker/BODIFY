@@ -25,7 +25,8 @@ Correction and sound-design tools stay closed until requested:
 - Open **Detector** only when automatic selection needs correction or advanced
   contour controls are required. Threshold itself remains directly editable on the
   permanent Input meter.
-- Open **Synth** only for optional Layer or Replace processing.
+- Open **Body Layer** only for optional Layer or Replace processing after that
+  engine is available.
 - Use **Original / Effect** for an explicit level-matched decision.
 
 ### Kick
@@ -84,7 +85,7 @@ No other sound-design section occupies space in the normal workflow.
 
 Closing Detector returns to the unchanged main surface. Tune never moves.
 
-## Synthesis drawer
+## Body Layer drawer
 
 - Off / Layer / Replace routing
 - Route-specific Layer Level or Replace Amount
@@ -96,6 +97,11 @@ Closing Detector returns to the unchanged main surface. Tune never moves.
 
 On first activation only Body is enabled. Replace begins at 50%. Retune remains active
 and Tune remains visible behind the drawer.
+
+Until the resynthesis engine is implemented, the drawer stays visible as part of the
+frozen 33-parameter contract but its sound controls are disabled and explicitly
+labelled as planned. Preview mode may demonstrate the interaction without claiming
+that audio processing exists.
 
 ## Parameter semantics
 
@@ -131,8 +137,8 @@ without an explicit signal-flow definition.
   the interaction needed to edit it.
 - Tooltips appear after a short pointer-hover delay and immediately on keyboard
   focus. Escape dismisses the current tooltip without changing the parameter.
-- A permanent `TOOLTIPS ON/OFF` control in the header globally shows or suppresses
-  the visual bubbles. Tooltips are on by default, an open or pending bubble is
+- A compact `?` help control in the header globally shows or suppresses the visual
+  bubbles. Help is on by default, an open or pending bubble is
   cancelled immediately when switched off, and the preference is stored locally
   when the host permits Web Storage.
 - The visual tooltip stays inside the plug-in chassis and above open drawers at the
@@ -147,7 +153,8 @@ without an explicit signal-flow definition.
 
 - Spectrum, meters, input level, confidence, and learned pitch are simulated only by
   the standalone preview adapter; the Amorph view has no invented live audio feed.
-- The DSP file is currently an audio-transparent parameter host.
+- Current implementation status is tracked in `PRODUCT_CONCEPT.md` and the README.
+  No future control is presented as active before its DSP path exists.
 - Retuning, analysis frames, detected-pitch events, and latency are not implemented.
 
 ## Acceptance checks
@@ -168,6 +175,6 @@ without an explicit signal-flow definition.
 12. All 33 endpoints contain complete tooltip copy and at least one keyboard-linked
    help target; representative controls pass hover, focus, dismissal, and collision
    checks at 1280×760 and 766×455.
-13. The global tooltip switch is visible and keyboard-operable at every supported
+13. The compact global help switch is visible and keyboard-operable at every supported
     host size. OFF suppresses hover/focus bubbles without changing parameter input,
     endpoint count, or persistent accessible descriptions.

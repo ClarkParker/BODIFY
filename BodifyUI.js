@@ -353,7 +353,7 @@ function knobHTML(id, size = "main", label = null) {
   return `<div class="knob ${size}" data-endpoint-id="${id}" style="--norm:${initialNorm.toFixed(5)};--angle:${initialAngle.toFixed(3)}deg;--arc-start:${initialArcStart.toFixed(4)};--arc-length:${initialArcLength.toFixed(4)};--arc-offset:${(-initialArcStart).toFixed(4)}">
     <div class="knob-label">${label ?? parameter.label}</div>
     <div class="knob-dial" role="slider" aria-label="${label ?? parameter.label}">${knobScaleHTML()}<span class="cap"><b></b></span></div>
-    ${size.includes("hero") ? `<div class="knob-landmarks" aria-hidden="true"><span>−12</span><span>0</span><span>+12</span></div>` : ""}
+    ${size.includes("hero") ? `<div class="knob-landmarks" aria-hidden="true"><span>−12 st</span><span>0</span><span>+12 st</span></div>` : ""}
     <div class="knob-value" role="textbox" aria-label="${label ?? parameter.label} value">${initialValue}</div>
   </div>`;
 }
@@ -428,6 +428,7 @@ class BodifyUI extends HTMLElement {
     this._wireTooltips();
     this._wireTooltipToggle();
     this._wireBridge();
+    this._setSynthesisAvailability(this._previewMode);
 
     this._resizeCanvas = () => {
       const rect = this._canvas.getBoundingClientRect();
@@ -801,8 +802,8 @@ class BodifyUI extends HTMLElement {
     if (button) {
       button.setAttribute("aria-pressed", String(this._tooltipsEnabled));
       button.setAttribute("aria-label", this._tooltipsEnabled
-        ? "Turn parameter tooltips off"
-        : "Turn parameter tooltips on");
+        ? "Turn parameter help off"
+        : "Turn parameter help on");
       const stateLabel = button.querySelector(".tooltip-toggle-state");
       if (stateLabel) stateLabel.textContent = this._tooltipsEnabled ? "ON" : "OFF";
     }
@@ -1229,6 +1230,10 @@ class BodifyUI extends HTMLElement {
       button.querySelector("b").textContent = "LISTENING FOR NEXT HIT…";
       status.textContent = "LISTENING";
       status.classList.add("working");
+      if (!this._previewMode) {
+        this.pc?.sendEventOrValue?.("refineRequest", 1);
+        return;
+      }
       this._learnTimer = setTimeout(() => {
         this._peakIndex = (this._peakIndex + 1) % PEAKS.length;
         const detected = PEAKS[this._peakIndex];
@@ -1240,6 +1245,20 @@ class BodifyUI extends HTMLElement {
         status.classList.remove("working");
       }, 1000);
     });
+  }
+
+  _setSynthesisAvailability(available) {
+    const drawer = this.querySelector(".synth-drawer");
+    if (!drawer) return;
+    drawer.dataset.available = String(Boolean(available));
+    drawer.querySelectorAll("button, [role='slider'], [role='textbox']").forEach(control => {
+      if (control.classList.contains("drawer-close")) return;
+      control.setAttribute("aria-disabled", String(!available));
+      if ("disabled" in control) control.disabled = !available;
+      if (!available && control.hasAttribute("tabindex")) control.tabIndex = -1;
+    });
+    const summary = drawer.querySelector(".synth-summary");
+    if (!available && summary) summary.textContent = "BODY LAYER · PLANNED";
   }
 
   _wireDrawers() {
@@ -1305,7 +1324,8 @@ class BodifyUI extends HTMLElement {
     if (!tuneReadout.isContentEditable) tuneReadout.textContent = formatCents(tune);
     const route = Math.round(this._values.param2);
     this._chassis.dataset.synth = String(route);
-    this.querySelector(".synth-summary").textContent = route === 1 ? "LAYER ACTIVE" : route === 2 ? "REPLACE ACTIVE" : "SYNTHESIS OFF";
+    const summary = this.querySelector(".synth-summary");
+    if (summary && this._previewMode) summary.textContent = route === 1 ? "LAYER ACTIVE" : route === 2 ? "REPLACE ACTIVE" : "BODY LAYER OFF";
   }
 
   _freqToNorm(frequency) {
@@ -1484,13 +1504,11 @@ class BodifyUI extends HTMLElement {
   }
   bodify-ui .drawer-trigger { min-width: 76px; padding: 0 11px; font-size: 9px; font-weight: 650; letter-spacing: .8px; }
   bodify-ui .drawer-trigger:hover, bodify-ui .drawer-trigger.selected { border-color: #47736e; color: #83e6da; background: #172825; }
-  bodify-ui .tooltip-toggle { min-width: 108px; padding: 0 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-  bodify-ui .tooltip-toggle i { width: 6px; height: 6px; flex: none; border-radius: 50%; background: #536066; }
-  bodify-ui .tooltip-toggle-label { color: #8d9b9f; font-size: 8px; font-weight: 700; letter-spacing: .7px; }
-  bodify-ui .tooltip-label-compact { display: none; }
+  bodify-ui .tooltip-toggle { min-width: 58px; padding: 0 8px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  bodify-ui .help-glyph { width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid #4b5b61; border-radius: 50%; color: #bac5c8; font-size: 11px; font-weight: 750; }
   bodify-ui .tooltip-toggle-state { color: #77858a; font-size: 8px; font-weight: 750; letter-spacing: .45px; }
   bodify-ui .tooltip-toggle[aria-pressed="true"] { border-color: #3e615e; background: #142321; }
-  bodify-ui .tooltip-toggle[aria-pressed="true"] i { background: var(--accent); box-shadow: 0 0 7px rgba(105,224,210,.6); }
+  bodify-ui .tooltip-toggle[aria-pressed="true"] .help-glyph { border-color: #4b8b84; color: #83e6da; box-shadow: 0 0 7px rgba(105,224,210,.16); }
   bodify-ui .tooltip-toggle[aria-pressed="true"] .tooltip-toggle-state { color: #83e6da; }
   bodify-ui .compare { height: 44px; display: flex; overflow: hidden; border: 1px solid #344249; border-radius: 5px; }
   bodify-ui .compare button { width: 67px; min-height: 42px; border: 0; border-right: 1px solid #344249; border-radius: 0; color: #7f8c91; font-size: 8px; font-weight: 650; letter-spacing: .6px; }
@@ -1790,7 +1808,7 @@ class BodifyUI extends HTMLElement {
     background:linear-gradient(180deg,rgba(29,64,60,.8),rgba(17,40,38,.9));
   }
   bodify-ui .tooltip-toggle {
-    min-width:112px;
+    min-width:58px;
     min-height:40.28px;
     padding:0 10px;
     border-color:rgba(150,179,187,.2);
@@ -1804,6 +1822,19 @@ class BodifyUI extends HTMLElement {
   bodify-ui .tooltip-toggle[aria-pressed="true"] {
     border-color:rgba(99,225,210,.38);
     background:linear-gradient(180deg,rgba(26,55,52,.88),rgba(16,35,34,.95));
+  }
+  bodify-ui .synth-drawer[data-available="false"] .synth-route,
+  bodify-ui .synth-drawer[data-available="false"] .route-controls,
+  bodify-ui .synth-drawer[data-available="false"] .synth-mixer,
+  bodify-ui .synth-drawer[data-available="false"] .synth-inspector {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui .synth-drawer[data-available="false"] .synth-off-note {
+    color:#c8a663;
+    border-color:rgba(200,166,99,.28);
+    background:rgba(74,55,22,.2);
   }
   bodify-ui .compare {
     height:40.28px;
@@ -2624,12 +2655,9 @@ class BodifyUI extends HTMLElement {
     bodify-ui .brand-sub { display:none; }
     bodify-ui .top-actions { gap:5px; }
     bodify-ui .drawer-trigger { min-width:64px; min-height:38px; padding:0 8px; font-size:9px; }
-    bodify-ui .tooltip-toggle { min-width:64px; min-height:38px; padding:0 6px; gap:4px; }
-    bodify-ui .tooltip-toggle i { width:5px; height:5px; }
-    bodify-ui .tooltip-label-full { display:none; }
-    bodify-ui .tooltip-label-compact { display:inline; }
-    bodify-ui .tooltip-toggle-label,
-    bodify-ui .tooltip-toggle-state { font-size:8px; }
+    bodify-ui .tooltip-toggle { min-width:48px; min-height:38px; padding:0 5px; gap:3px; }
+    bodify-ui .help-glyph { width:18px; height:18px; font-size:10px; }
+    bodify-ui .tooltip-toggle-state { font-size:7px; }
     bodify-ui .effect-led { margin:0; }
     bodify-ui .compare { height:38px; }
     bodify-ui .compare button { width:54px; font-size:9px; }
@@ -2760,8 +2788,8 @@ class BodifyUI extends HTMLElement {
     <div></div>
     <div class="top-actions">
       <button class="drawer-trigger" data-drawer="detector">DETECTOR</button>
-      <button class="drawer-trigger" data-drawer="synth">SYNTH</button>
-      <button class="tooltip-toggle" type="button" aria-pressed="true" aria-label="Turn parameter tooltips off"><i aria-hidden="true"></i><span class="tooltip-toggle-label"><span class="tooltip-label-full">TOOLTIPS</span><span class="tooltip-label-compact">TIPS</span></span><b class="tooltip-toggle-state">ON</b></button>
+      <button class="drawer-trigger" data-drawer="synth">BODY LAYER</button>
+      <button class="tooltip-toggle" type="button" aria-pressed="true" aria-label="Turn parameter help off"><span class="help-glyph" aria-hidden="true">?</span><b class="tooltip-toggle-state">ON</b></button>
       <i class="effect-led"></i>
       <div class="compare" data-endpoint-id="param1" aria-label="Original or effect"><button>ORIGINAL</button><button class="selected">EFFECT</button></div>
     </div>
@@ -2785,7 +2813,7 @@ class BodifyUI extends HTMLElement {
             <i class="pitch-arrow"></i>
             <div class="pitch-node analyzer-target"><label>TARGET</label><strong class="target-frequency">196 Hz</strong><span class="target-note">G3</span></div>
           </div>
-          <div class="band-audition"><button class="focus-solo" data-endpoint-id="param18" aria-pressed="false"><span>HOLD SOLO</span><b>HOLD</b></button><button class="solo-lock" data-tooltip-param="param18" aria-pressed="false">LATCH</button></div>
+          <div class="band-audition"><button class="focus-solo" data-endpoint-id="param18" aria-pressed="false"><span>BODY SOLO</span><b>HOLD</b></button><button class="solo-lock" data-tooltip-param="param18" aria-label="Pin Body Solo" aria-pressed="false">PIN</button></div>
           <button class="snap-button" data-endpoint-id="param16" aria-pressed="false"><b>SNAP OFF</b></button>
         </div>
         <svg class="spectrum-fallback" viewBox="0 0 800 240" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="spectrumFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#50dccb" stop-opacity=".24"/><stop offset="1" stop-color="#50dccb" stop-opacity="0"/></linearGradient></defs><path class="spectrum-area" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206 L800 240 L0 240Z" fill="url(#spectrumFill)"/><path class="spectrum-line" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206" fill="none" stroke="#50dccb" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
@@ -2824,11 +2852,11 @@ class BodifyUI extends HTMLElement {
     <div class="advanced-grid"><div class="advanced-row"><label>RESONANCES SHOWN</label><div class="segmented" data-endpoint-id="param15"><button data-value="1">1</button><button class="selected" data-value="2">2</button><button data-value="3">3</button><button data-value="4">4</button></div></div><div class="advanced-row"><label>CONTOUR</label><div class="segmented" data-endpoint-id="param13"><button class="selected" data-value="0">RELATIVE</button><button data-value="1">LOCK</button></div></div><div class="advanced-row contour-strength">${parameterSliderHTML("param14", "Contour Strength", "SUBTLE", "FIRM")}</div></div>
   </aside>
 
-  <aside class="drawer synth-drawer" data-channel="body">
-    <div class="drawer-head"><div><strong>OPTIONAL SYNTHESIS</strong><span>Add or replace generated body without changing the Retune workflow.</span></div><button class="drawer-close" data-drawer="synth" aria-label="Close synthesis">×</button></div>
-    <div class="synth-summary">SYNTHESIS OFF</div>
+  <aside class="drawer synth-drawer" data-channel="body" data-available="false">
+    <div class="drawer-head"><div><strong>BODY LAYER / REPLACE</strong><span>Source-following resynthesis after the retuner core is validated.</span></div><button class="drawer-close" data-drawer="synth" aria-label="Close Body Layer">×</button></div>
+    <div class="synth-summary">BODY LAYER · PLANNED</div>
     <div class="segmented synth-route" data-endpoint-id="param2"><button class="selected" data-value="0">OFF</button><button data-value="1">LAYER</button><button data-value="2">REPLACE</button></div>
-    <div class="synth-off-note">Synthesis is optional. The normal workflow remains Body Map → Tune → Body Response.</div>
+    <div class="synth-off-note">Not active in this build. The controls stay reserved for the versioned parameter contract.</div>
     <div class="route-controls"><div class="layer-control">${parameterSliderHTML("param30", "Layer Level", "OFF", "+12 dB")}</div><div class="replace-control">${parameterSliderHTML("param9", "Replace Amount", "ORIGINAL", "REPLACED")}</div>${parameterSliderHTML("param28", "Follow", "LOOSE", "TIGHT")}${parameterSliderHTML("param27", "Length", "SHORT", "LONG")}${parameterSliderHTML("param29", "Drive", "CLEAN", "DENSE")}</div>
     <div class="synth-mixer">
       <div class="synth-channel"><button class="channel-select selected" data-channel="body" aria-pressed="true">BODY</button>${toggleHTML("param31", "POWER")}${parameterSliderHTML("param19", "Level", "0", "100")}</div>
