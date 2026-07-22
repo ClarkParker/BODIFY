@@ -1,7 +1,7 @@
 {
   "CmajorVersion": 1,
   "ID": "com.clarkparker.bodify",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "name": "BODIFY",
   "description": "Zero-latency drum body retuning with source-following modal resynthesis.",
   "category": "effect",

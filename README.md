@@ -8,9 +8,9 @@ single rotary hero control, and Speed, Shift Trim, and Body Decay are large line
 work controls. Detector correction and future Body Layer/Replace processing live in
 optional drawers and do not occupy the normal working surface.
 
-Version 0.2.0 is the first functional M1 audio checkpoint. It implements the
-zero-latency modal retuner and real DSP telemetry; it does not claim the later
-phase-coherent Studio engine or the planned Body/Noise/Exciter layers.
+Version 0.2.1 is the current M1 maintenance checkpoint. The 0.2.0 audio core
+implements the zero-latency modal retuner and real DSP telemetry; it does not claim
+the later phase-coherent Studio engine or the planned Body/Noise/Exciter layers.
 
 ## Files
 
@@ -76,14 +76,18 @@ their audio engine exists they are visibly unavailable outside Preview mode. The
 secondary parameters open in a contextual inspector. All 33 Cmajor parameters have
 exactly one rendered UI endpoint. Every endpoint also has a unified tooltip with its
 purpose, range or choices, default value, and editing gesture. The same help opens on
-pointer hover and keyboard focus and remains within the plug-in bounds. A compact
+pointer hover and keyboard focus and remains within the plug-in bounds. Every action
+button uses the same contextual help system, including panels, Refine, peak reset,
+channel inspectors, close actions, and the help switch itself. A compact
 `?` header control hides or restores all visual help bubbles without
 removing the keyboard-linked screen-reader descriptions; its preference is stored
 locally when the plug-in host supports Web Storage.
 
-The view uses native responsive layouts instead of shrinking a fixed chassis. The
-1280×760 host is the full layout; 900 px and 766 px use compact rules that preserve
-physical text, fader, and hit-target sizes.
+The view uses native responsive layouts at supported host sizes instead of shrinking
+a fixed chassis. The 1280×760 host is the full layout; 900 px and 766 px use compact
+rules that preserve physical text, fader, and hit-target sizes. If an embedding window
+is smaller than 766×455, the complete compact surface is proportionally fitted and
+centered so controls are never clipped.
 
 ## Verification
 

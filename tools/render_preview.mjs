@@ -195,6 +195,44 @@ try {
     await page.evaluate(() => document.activeElement?.blur?.());
     verifiedTooltipInteractions.add(id);
   };
+  const assertControlTooltip = async id => {
+    const owner = page.locator(`[data-tooltip-control="${id}"]`).first();
+    if (!await owner.count() || !await owner.isVisible())
+      throw new Error(`Control tooltip owner ${id} is not visible in the current state`);
+    const metadata = await owner.evaluate(element => ({
+      title: element.dataset.tooltipTitle?.trim(),
+      description: element.dataset.tooltip?.trim(),
+      range: element.dataset.tooltipRange?.trim(),
+      usage: element.dataset.tooltipUsage?.trim(),
+    }));
+    if (!metadata.title || !metadata.description || !metadata.range || !metadata.usage)
+      throw new Error(`Control tooltip metadata is incomplete for ${id}: ${JSON.stringify(metadata)}`);
+
+    const trigger = page.locator(`[data-tooltip-focus="true"][data-tooltip-control="${id}"]:visible`).first();
+    if (!await trigger.count()) throw new Error(`Control tooltip ${id} has no visible keyboard target`);
+    const descriptionID = `control-help-${id}`;
+    const describedBy = (await trigger.getAttribute("aria-describedby") ?? "").split(/\s+/);
+    if (!describedBy.includes(descriptionID) || await page.locator(`#${descriptionID}`).count() !== 1)
+      throw new Error(`Control tooltip ${id} has no stable accessible description link`);
+
+    await page.evaluate(() => document.activeElement?.blur?.());
+    await page.mouse.move(viewportWidth / 2, 2);
+    await trigger.hover();
+    const hoverState = await readOpenTooltip(id);
+    if (hoverState.title !== metadata.title || hoverState.description !== metadata.description
+      || hoverState.range !== metadata.range || hoverState.usage !== metadata.usage)
+      throw new Error(`Control hover tooltip mismatch for ${id}: ${JSON.stringify({ metadata, hoverState })}`);
+    await page.mouse.move(viewportWidth / 2, 2);
+    await page.waitForFunction(() => document.querySelector(".parameter-tooltip")?.dataset.open === "false", null, { timeout: 800 });
+
+    await trigger.focus();
+    const focusState = await readOpenTooltip(id);
+    if (focusState.description !== metadata.description)
+      throw new Error(`Control focus tooltip mismatch for ${id}`);
+    await page.keyboard.press("Escape");
+    await page.waitForFunction(() => document.querySelector(".parameter-tooltip")?.dataset.open === "false", null, { timeout: 800 });
+    await page.evaluate(() => document.activeElement?.blur?.());
+  };
   const tooltipIsOpen = () => page.locator(".parameter-tooltip").evaluate(tooltip => tooltip.dataset.open === "true");
   const assertTooltipToggle = async () => {
     const toggle = page.locator(".tooltip-toggle");
@@ -365,6 +403,31 @@ try {
   await assertTooltipToggle();
   for (const id of ["param1", "param4", "param5", "param6", "param7", "param12", "param18"])
     await assertParameterTooltip(id);
+  for (const id of ["detector", "body-layer", "peak-reset"])
+    await assertControlTooltip(id);
+
+  if (requestedMode === 0 && viewportWidth === 766 && !requestedTooltipID) {
+    const fittedViewport = { width: 600, height: 356 };
+    await page.setViewportSize(fittedViewport);
+    await page.waitForFunction(() => document.querySelector(".chassis")?.dataset.windowFit === "scaled");
+    const fitted = await page.locator(".chassis").evaluate((chassis, viewport) => {
+      const box = chassis.getBoundingClientRect();
+      return {
+        box: { left: box.left, top: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height },
+        viewport,
+        fit: chassis.dataset.windowFit,
+        zoom: Number.parseFloat(getComputedStyle(chassis).zoom),
+      };
+    }, fittedViewport);
+    if (fitted.fit !== "scaled" || fitted.box.left < -1 || fitted.box.top < -1
+      || fitted.box.right > fittedViewport.width + 1 || fitted.box.bottom > fittedViewport.height + 1
+      || fitted.box.width < fittedViewport.width * .97 || fitted.box.height < fittedViewport.height * .97
+      || !Number.isFinite(fitted.zoom) || fitted.zoom >= 1)
+      throw new Error(`Compact surface did not scale into the smaller window: ${JSON.stringify(fitted)}`);
+    await assertControlTooltip("detector");
+    await page.setViewportSize({ width: viewportWidth, height: viewportHeight });
+    await page.waitForFunction(() => document.querySelector(".chassis")?.dataset.windowFit === "native");
+  }
   await page.locator(".knob.hero .knob-dial").dblclick({ position: { x: 18, y: 18 } });
   await page.waitForFunction(() => document.querySelector(".tune-readout")?.textContent.trim() === "0 ct");
   if (await page.locator(".knob.hero").count() !== 1)
@@ -616,6 +679,32 @@ try {
   const invalidTooltips = tooltipCoverage.filter(item => item.ownerCount !== 1 || !item.metadata || !item.help || item.focusTargets < 1 || !item.described);
   if (invalidTooltips.length)
     throw new Error(`Parameter tooltip coverage is incomplete: ${JSON.stringify(invalidTooltips)}`);
+  const expectedControlTooltips = [
+    "detector", "body-layer", "help", "peak-reset", "close-detector", "refine",
+    "close-body-layer", "inspect-body", "inspect-noise", "inspect-exciter",
+  ];
+  const controlTooltipCoverage = await page.evaluate(ids => ids.map(id => {
+    const owners = [...document.querySelectorAll(`[data-tooltip-control="${id}"]`)];
+    const owner = owners[0];
+    const help = document.getElementById(`control-help-${id}`);
+    const focusTargets = [...document.querySelectorAll(`[data-tooltip-focus="true"][data-tooltip-control="${id}"]`)];
+    return {
+      id,
+      ownerCount: owners.length,
+      metadata: [owner?.dataset.tooltipTitle, owner?.dataset.tooltip, owner?.dataset.tooltipRange, owner?.dataset.tooltipUsage].every(value => Boolean(value?.trim())),
+      help: Boolean(help?.textContent.trim()),
+      focusTargets: focusTargets.length,
+      described: focusTargets.some(target => (target.getAttribute("aria-describedby") ?? "").split(/\s+/).includes(`control-help-${id}`)),
+    };
+  }), expectedControlTooltips);
+  const invalidControlTooltips = controlTooltipCoverage.filter(item => item.ownerCount !== 1 || !item.metadata || !item.help || item.focusTargets < 1 || !item.described);
+  if (invalidControlTooltips.length)
+    throw new Error(`Control tooltip coverage is incomplete: ${JSON.stringify(invalidControlTooltips)}`);
+  const unmappedButtons = await page.evaluate(() => [...document.querySelectorAll("button")]
+    .filter(button => !button.closest("[data-tooltip-param], [data-tooltip-control], [data-endpoint-id]"))
+    .map(button => button.className || button.textContent.trim()));
+  if (unmappedButtons.length)
+    throw new Error(`Buttons without contextual help: ${JSON.stringify(unmappedButtons)}`);
   const expectedTooltipInteractions = ["param1", "param4", "param5", "param6", "param7", "param9", "param12", "param14", "param15", "param18", "param20", "param24", "param26", "param30"];
   const missingTooltipInteractions = expectedTooltipInteractions.filter(id => !verifiedTooltipInteractions.has(id));
   if (missingTooltipInteractions.length)
@@ -678,7 +767,11 @@ try {
   const staticWave = await staticFrame.locator(".spectrum-fallback .spectrum-line").count();
   const staticAutoGain = await staticFrame.locator('.toggle[data-endpoint-id="param11"]').getAttribute("aria-pressed");
   const staticTooltips = await staticFrame.locator("[data-endpoint-id][data-tooltip]").count();
+  const staticControlTooltips = await staticFrame.locator("[data-tooltip-control][data-tooltip]").count();
   const staticHelpEntries = await staticFrame.locator(".parameter-help-bank > span").count();
+  const staticUnmappedButtons = await staticFrame.locator("button:not([data-tooltip-param]):not([data-tooltip-control])").evaluateAll(buttons => buttons
+    .filter(button => !button.closest("[data-endpoint-id]"))
+    .map(button => button.className || button.textContent.trim()));
   const staticTooltipToggle = await staticFrame.locator(".tooltip-toggle").evaluate(button => ({
     count: button.parentElement.querySelectorAll(".tooltip-toggle").length,
     pressed: button.getAttribute("aria-pressed"),
@@ -688,10 +781,11 @@ try {
   const staticTooltipOpen = await staticFrame.locator(".parameter-tooltip").getAttribute("data-open");
   if (!staticChassis || staticChassis.width < viewportWidth * 0.7 || staticChassis.height < viewportHeight * 0.7
     || staticTitle?.trim() !== "BODY MAP" || staticWave !== 1 || staticAutoGain !== "true"
-    || staticTooltips !== 33 || staticHelpEntries !== 33 || staticTooltipToggle.count !== 1
+    || staticTooltips !== 33 || staticControlTooltips !== 10 || staticHelpEntries !== 43 || staticUnmappedButtons.length
+    || staticTooltipToggle.count !== 1
     || staticTooltipToggle.pressed !== "true" || staticTooltipToggle.text !== "ON"
     || !staticTooltipToggle.visible || staticTooltipOpen !== "false")
-    throw new Error(`Paused preview fallback is blank or incomplete: ${JSON.stringify({ staticChassis, staticTitle, staticTooltips, staticHelpEntries, staticTooltipToggle, staticTooltipOpen })}`);
+    throw new Error(`Paused preview fallback is blank or incomplete: ${JSON.stringify({ staticChassis, staticTitle, staticTooltips, staticControlTooltips, staticHelpEntries, staticUnmappedButtons, staticTooltipToggle, staticTooltipOpen })}`);
 
   console.log(`Rendered and interaction-tested actual UI: ${outputPath}`);
 } finally {

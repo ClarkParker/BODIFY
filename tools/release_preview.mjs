@@ -97,7 +97,7 @@ const manifest = {
       "33 unique parameter endpoints",
       "drawer geometry and overflow",
       "responsive control sizes",
-      "33 parameter tooltips with hover, keyboard focus, and accessible descriptions",
+      "33 parameter tooltips plus contextual help for every visible button",
       "tooltip collision bounds at full and compact sizes",
       "global tooltip visibility toggle via pointer and keyboard",
       "open and pending tooltip cancellation when switched off",

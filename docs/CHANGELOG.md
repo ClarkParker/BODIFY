@@ -1,5 +1,15 @@
 # BODIFY Changelog
 
+## 0.2.1 — UI help and window-fit maintenance
+
+- Extended contextual help from the 33 parameters to every visible button, including
+  panels, Refine, peak reset, channel inspectors, close actions, and the help switch.
+- Added persistent keyboard-linked descriptions for all non-parameter actions.
+- Restored proportional compact-surface fitting below 766×455 while retaining native
+  responsive layouts and full hit-target sizes at all supported host dimensions.
+- Added regression checks for complete button help coverage, scaled-window bounds,
+  tooltip collision safety while scaled, and the JavaScript-paused first frame.
+
 ## 0.2.0 — M1 functional retuner
 
 - Replaced transparent passthrough with a causal, zero-look-ahead modal drum-body retuner.

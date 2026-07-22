@@ -4,6 +4,8 @@
 
 const CHASSIS_W = 1280;
 const CHASSIS_H = 760;
+const COMPACT_W = 766;
+const COMPACT_H = 455;
 const TOOLTIP_PREFERENCE_KEY = "bodify.ui.tooltips.enabled.v1";
 
 const PARAMS = [
@@ -245,13 +247,84 @@ const PARAM_TOOLTIPS = {
   },
 };
 
+// Actions which are not automatable parameters still need the same discoverable
+// help as sound controls. Keeping them in one registry makes it testable that no
+// button silently falls outside the help system.
+const CONTROL_TOOLTIPS = {
+  detector: {
+    title: "Detector",
+    description: "Opens correction tools for difficult or ambiguous body detection without moving the permanent Tune control.",
+    range: "Panel: Closed · Open · Default: Closed",
+    usage: "Click to open or close the Detector panel.",
+  },
+  "body-layer": {
+    title: "Body Layer",
+    description: "Opens the reserved Layer and Replace controls. Their audio engine is planned and is not active in this build.",
+    range: "Panel: Closed · Open · Default: Closed",
+    usage: "Click to inspect or close the Body Layer panel.",
+  },
+  help: {
+    title: "Interface Help",
+    description: "Shows or hides the contextual help bubbles for every parameter and button in the interface.",
+    range: "Off · On · Default: On",
+    usage: "Click or press Enter or Space to toggle visual help.",
+  },
+  "peak-reset": {
+    title: "Output Peak",
+    description: "Displays the highest recent output level and clears the held peak without changing Output gain.",
+    range: "Readout: −70 to 0 dBFS",
+    usage: "Click to reset the held output peak.",
+  },
+  "close-detector": {
+    title: "Close Detector",
+    description: "Closes the Detector panel and returns to the unchanged main retuning surface.",
+    range: "Action: Close panel",
+    usage: "Click or press Enter or Space.",
+  },
+  refine: {
+    title: "Refine Detection",
+    description: "Listens to the next clean drum hit and refreshes the detected body frequency.",
+    range: "States: Ready · Listening · Locked · No Lock",
+    usage: "Click, then play one clean hit above Threshold.",
+  },
+  "close-body-layer": {
+    title: "Close Body Layer",
+    description: "Closes the Body Layer panel and returns to the permanent retuning controls.",
+    range: "Action: Close panel",
+    usage: "Click or press Enter or Space.",
+  },
+  "inspect-body": {
+    title: "Body Details",
+    description: "Selects the Body channel so its Character and Sub controls appear in the detail inspector.",
+    range: "Inspector: Body",
+    usage: "Click to select this channel's detail controls.",
+  },
+  "inspect-noise": {
+    title: "Noise Details",
+    description: "Selects the Noise channel so its Color and Decay controls appear in the detail inspector.",
+    range: "Inspector: Noise",
+    usage: "Click to select this channel's detail controls.",
+  },
+  "inspect-exciter": {
+    title: "Exciter Details",
+    description: "Selects the Exciter channel so its Tone control appears in the detail inspector.",
+    range: "Inspector: Exciter",
+    usage: "Click to select this channel's detail controls.",
+  },
+};
+
 for (const parameter of PARAMS) {
   parameter.tooltip = PARAM_TOOLTIPS[parameter.id];
   if (!parameter.tooltip?.description || !parameter.tooltip?.range || !parameter.tooltip?.usage)
     throw new Error(`Missing tooltip content for ${parameter.id}`);
 }
+for (const [id, tooltip] of Object.entries(CONTROL_TOOLTIPS)) {
+  if (!tooltip?.title || !tooltip.description || !tooltip.range || !tooltip.usage)
+    throw new Error(`Missing control tooltip content for ${id}`);
+}
 
 const PARAM = new Map(PARAMS.map(parameter => [parameter.id, parameter]));
+const CONTROL_TOOLTIP = new Map(Object.entries(CONTROL_TOOLTIPS));
 const PEAKS = [98, 196, 392, 784];
 
 function clamp(value, minimum, maximum) { return Math.min(maximum, Math.max(minimum, value)); }
@@ -278,12 +351,32 @@ function parameterTooltipAttributes(id) {
   return `data-tooltip-param="${id}" data-tooltip-title="${escapeHTML(tooltip.title ?? parameter.label)}" data-tooltip="${escapeHTML(tooltip.description)}" data-tooltip-range="${escapeHTML(tooltip.range)}" data-tooltip-usage="${escapeHTML(tooltip.usage)}"`;
 }
 
-function parameterHelpHTML() {
-  const descriptions = PARAMS.map(parameter => {
+function controlTooltipAttributes(id) {
+  const tooltip = CONTROL_TOOLTIP.get(id);
+  if (!tooltip) return "";
+  return `data-tooltip-control="${id}" data-tooltip-title="${escapeHTML(tooltip.title)}" data-tooltip="${escapeHTML(tooltip.description)}" data-tooltip-range="${escapeHTML(tooltip.range)}" data-tooltip-usage="${escapeHTML(tooltip.usage)}"`;
+}
+
+function tooltipDefinition(id) {
+  const parameter = PARAM.get(id);
+  if (parameter) return { ...parameter.tooltip, title: parameter.tooltip.title ?? parameter.label, kicker: "PARAMETER HELP" };
+  const control = CONTROL_TOOLTIP.get(id);
+  return control ? { ...control, kicker: "CONTROL HELP" } : null;
+}
+
+function tooltipDescriptionID(id) {
+  return PARAM.has(id) ? `parameter-help-${id}` : `control-help-${id}`;
+}
+
+function tooltipHelpHTML() {
+  const parameterDescriptions = PARAMS.map(parameter => {
     const tooltip = parameter.tooltip;
     return `<span id="parameter-help-${parameter.id}">${escapeHTML(tooltip.title ?? parameter.label)}. ${escapeHTML(tooltip.description)} ${escapeHTML(tooltip.range)} ${escapeHTML(tooltip.usage)}</span>`;
   }).join("");
-  return `<div class="parameter-help-bank">${descriptions}</div>`;
+  const controlDescriptions = [...CONTROL_TOOLTIP].map(([id, tooltip]) =>
+    `<span id="control-help-${id}">${escapeHTML(tooltip.title)}. ${escapeHTML(tooltip.description)} ${escapeHTML(tooltip.range)} ${escapeHTML(tooltip.usage)}</span>`
+  ).join("");
+  return `<div class="parameter-help-bank">${parameterDescriptions}${controlDescriptions}</div>`;
 }
 
 function valueToNorm(parameter, value) {
@@ -867,10 +960,10 @@ class BodifyUI extends HTMLElement {
   }
 
   _resolveTooltipTarget(node) {
-    const trigger = node?.closest?.("[data-tooltip-param], [data-endpoint-id]");
+    const trigger = node?.closest?.("[data-tooltip-param], [data-tooltip-control], [data-endpoint-id]");
     if (!trigger || !this.contains(trigger)) return null;
-    const id = trigger.dataset.tooltipParam ?? trigger.dataset.endpointId;
-    return PARAM.has(id) ? { id, trigger } : null;
+    const id = trigger.dataset.tooltipParam ?? trigger.dataset.tooltipControl ?? trigger.dataset.endpointId;
+    return tooltipDefinition(id) ? { id, trigger } : null;
   }
 
   _readTooltipPreference(fallback = true) {
@@ -939,20 +1032,21 @@ class BodifyUI extends HTMLElement {
 
     const focusableSelector = "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
     const describedParameters = new Set();
-    this.querySelectorAll("[data-tooltip-param]").forEach(trigger => {
-      const id = trigger.dataset.tooltipParam;
-      if (!PARAM.has(id)) return;
+    this.querySelectorAll("[data-tooltip-param], [data-tooltip-control]").forEach(trigger => {
+      const id = trigger.dataset.tooltipParam ?? trigger.dataset.tooltipControl;
+      if (!tooltipDefinition(id)) return;
       const targets = trigger.matches(focusableSelector)
         ? [trigger]
         : [...trigger.querySelectorAll(focusableSelector)];
       targets.forEach(target => {
-        target.dataset.tooltipParam = id;
+        if (PARAM.has(id)) target.dataset.tooltipParam = id;
+        else target.dataset.tooltipControl = id;
         target.dataset.tooltipFocus = "true";
-        const descriptionID = `parameter-help-${id}`;
+        const descriptionID = tooltipDescriptionID(id);
         const describedBy = new Set((target.getAttribute("aria-describedby") ?? "").split(/\s+/).filter(Boolean));
         describedBy.add(descriptionID);
         target.setAttribute("aria-describedby", [...describedBy].join(" "));
-        describedParameters.add(id);
+        if (PARAM.has(id)) describedParameters.add(id);
       });
     });
     if (describedParameters.size !== PARAMS.length) {
@@ -1042,10 +1136,10 @@ class BodifyUI extends HTMLElement {
   }
 
   _showParameterTooltip(id, trigger, point) {
-    const parameter = PARAM.get(id);
-    const tooltip = parameter?.tooltip;
+    const tooltip = tooltipDefinition(id);
     if (!this._tooltipsEnabled || !tooltip || !this._tooltip || !trigger?.isConnected) return;
-    this._tooltip.querySelector(".tooltip-title").textContent = tooltip.title ?? parameter.label;
+    this._tooltip.querySelector(".tooltip-kicker").textContent = tooltip.kicker;
+    this._tooltip.querySelector(".tooltip-title").textContent = tooltip.title;
     this._tooltip.querySelector(".tooltip-description").textContent = tooltip.description;
     this._tooltip.querySelector(".tooltip-range").textContent = tooltip.range;
     this._tooltip.querySelector(".tooltip-usage").textContent = tooltip.usage;
@@ -1063,15 +1157,18 @@ class BodifyUI extends HTMLElement {
       this._hideParameterTooltip();
       return;
     }
-    const margin = 9;
-    const gap = 11;
+    const scaleX = Math.max(.01, chassisRect.width / Math.max(1, this._chassis.offsetWidth));
+    const scaleY = Math.max(.01, chassisRect.height / Math.max(1, this._chassis.offsetHeight));
+    const marginX = 9 * scaleX;
+    const marginY = 9 * scaleY;
+    const gap = 11 * scaleY;
     const anchorX = Number.isFinite(point?.x) ? point.x : triggerRect.left + triggerRect.width / 2;
     const anchorTop = Number.isFinite(point?.y) ? point.y : triggerRect.top;
     const anchorBottom = Number.isFinite(point?.y) ? point.y : triggerRect.bottom;
-    const minimumLeft = chassisRect.left + margin;
-    const maximumLeft = Math.max(minimumLeft, chassisRect.right - tooltipRect.width - margin);
-    const minimumTop = chassisRect.top + margin;
-    const maximumTop = Math.max(minimumTop, chassisRect.bottom - tooltipRect.height - margin);
+    const minimumLeft = chassisRect.left + marginX;
+    const maximumLeft = Math.max(minimumLeft, chassisRect.right - tooltipRect.width - marginX);
+    const minimumTop = chassisRect.top + marginY;
+    const maximumTop = Math.max(minimumTop, chassisRect.bottom - tooltipRect.height - marginY);
     let left = clamp(anchorX - tooltipRect.width / 2, minimumLeft, maximumLeft);
     let top = anchorTop - tooltipRect.height - gap;
     let placement = "above";
@@ -1081,9 +1178,11 @@ class BodifyUI extends HTMLElement {
     }
     top = clamp(top, minimumTop, maximumTop);
     this._tooltip.dataset.placement = placement;
-    this._tooltip.style.setProperty("--tooltip-arrow-x", `${clamp(anchorX - left, 15, tooltipRect.width - 15)}px`);
-    this._tooltip.style.left = `${left - chassisRect.left}px`;
-    this._tooltip.style.top = `${top - chassisRect.top}px`;
+    const arrowMargin = 15 * scaleX;
+    const arrowX = clamp(anchorX - left, arrowMargin, tooltipRect.width - arrowMargin) / scaleX;
+    this._tooltip.style.setProperty("--tooltip-arrow-x", `${arrowX}px`);
+    this._tooltip.style.left = `${(left - chassisRect.left) / scaleX}px`;
+    this._tooltip.style.top = `${(top - chassisRect.top) / scaleY}px`;
   }
 
   _hideParameterTooltip() {
@@ -1551,17 +1650,42 @@ class BodifyUI extends HTMLElement {
     if (!this._chassis) return;
     const width = window.innerWidth || CHASSIS_W;
     const height = window.innerHeight || CHASSIS_H;
-    this.style.display = "block";
+    this.style.display = "flex";
+    this.style.position = "relative";
     this.style.overflow = "hidden";
+    this.style.alignItems = "center";
+    this.style.justifyContent = "center";
     this.style.width = width + "px";
     this.style.height = height + "px";
     let effective = this.getBoundingClientRect().width / width;
     if (!Number.isFinite(effective) || effective < .3 || effective > 3) effective = 1;
-    this.style.width = width / effective + "px";
-    this.style.height = height / effective + "px";
-    this._chassis.style.width = "100%";
-    this._chassis.style.height = "100%";
-    this._chassis.classList.toggle("compact", width < 860 || height < 520);
+    const availableWidth = width / effective;
+    const availableHeight = height / effective;
+    this.style.width = availableWidth + "px";
+    this.style.height = availableHeight + "px";
+
+    const fitCompactSurface = availableWidth < COMPACT_W || availableHeight < COMPACT_H;
+    if (fitCompactSurface) {
+      const scale = Math.min(availableWidth / COMPACT_W, availableHeight / COMPACT_H);
+      this._chassis.style.position = "relative";
+      this._chassis.style.left = "auto";
+      this._chassis.style.top = "auto";
+      this._chassis.style.width = COMPACT_W + "px";
+      this._chassis.style.height = COMPACT_H + "px";
+      this._chassis.style.zoom = String(scale);
+      this._chassis.dataset.windowFit = "scaled";
+    }
+    else {
+      this._chassis.style.position = "relative";
+      this._chassis.style.left = "auto";
+      this._chassis.style.top = "auto";
+      this._chassis.style.width = "100%";
+      this._chassis.style.height = "100%";
+      this._chassis.style.zoom = "1";
+      this._chassis.style.transform = "none";
+      this._chassis.dataset.windowFit = "native";
+    }
+    this._chassis.classList.toggle("compact", availableWidth < 860 || availableHeight < 520);
     let parent = this.parentElement;
     while (parent && parent !== document.body) {
       parent.style.overflow = "hidden";
@@ -1840,8 +1964,8 @@ class BodifyUI extends HTMLElement {
     display:block;
     width:100%;
     height:100%;
-    min-width:720px;
-    min-height:430px;
+    min-width:0;
+    min-height:0;
     font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
     font-size:12px;
     color:var(--text);
@@ -1857,8 +1981,8 @@ class BodifyUI extends HTMLElement {
   bodify-ui .chassis {
     width:100%;
     height:100%;
-    min-width:720px;
-    min-height:430px;
+    min-width:0;
+    min-height:0;
     border:0;
     border-radius:0;
     background:
@@ -2780,8 +2904,8 @@ class BodifyUI extends HTMLElement {
   @media (max-width:960px), (max-height:600px) {
     bodify-ui {
       --header-h:48px;
-      min-width:720px;
-      min-height:430px;
+      min-width:0;
+      min-height:0;
     }
     bodify-ui .topbar {
       padding:0 9px;
@@ -2925,9 +3049,9 @@ class BodifyUI extends HTMLElement {
     <div class="brand"><div class="brand-mark">B</div><div><div class="brand-name">BODIFY</div><div class="brand-sub">DRUM BODY RETUNER</div></div></div>
     <div></div>
     <div class="top-actions">
-      <button class="drawer-trigger" data-drawer="detector">DETECTOR</button>
-      <button class="drawer-trigger" data-drawer="synth">BODY LAYER</button>
-      <button class="tooltip-toggle" type="button" aria-pressed="true" aria-label="Turn parameter help off"><span class="help-glyph" aria-hidden="true">?</span><b class="tooltip-toggle-state">ON</b></button>
+      <button class="drawer-trigger" data-drawer="detector" ${controlTooltipAttributes("detector")}>DETECTOR</button>
+      <button class="drawer-trigger" data-drawer="synth" ${controlTooltipAttributes("body-layer")}>BODY LAYER</button>
+      <button class="tooltip-toggle" type="button" aria-pressed="true" aria-label="Turn parameter help off" ${controlTooltipAttributes("help")}><span class="help-glyph" aria-hidden="true">?</span><b class="tooltip-toggle-state">ON</b></button>
       <i class="effect-led"></i>
       <div class="compare" data-endpoint-id="param1" aria-label="Original or effect"><button>ORIGINAL</button><button class="selected">EFFECT</button></div>
     </div>
@@ -2976,37 +3100,37 @@ class BodifyUI extends HTMLElement {
       <div class="rail-subtitle">GAIN</div>
       <div class="output-stack"><div class="output-meter"><i class="mini-meter"><b class="meter-fill"></b></i><i class="mini-meter"><b class="meter-fill"></b></i></div><div class="output-fader" data-endpoint-id="param12"><div class="fader-track" role="slider" aria-label="Output gain"><i class="fader-thumb"></i></div><span class="fader-scale" aria-hidden="true"><b>+12</b><b>0</b><b>−24</b></span></div></div>
       <div class="fader-value">0.0 dB</div>
-      <button class="clip-reset" title="Click to reset output peak"><span>PEAK · CLICK RESET</span><b class="output-peak">−12.4 dBFS</b></button>
+      <button class="clip-reset" ${controlTooltipAttributes("peak-reset")}><span>PEAK · CLICK RESET</span><b class="output-peak">−12.4 dBFS</b></button>
       ${toggleHTML("param11", "AUTO GAIN")}
       <div class="segmented" data-endpoint-id="param17"><button class="selected" data-value="0">LINK</button><button data-value="1">DUAL</button></div>
     </aside>
   </main>
 
   <aside class="drawer detector-drawer">
-    <div class="drawer-head"><div><strong>DETECTOR</strong><span>Correction tools for difficult or ambiguous hits.</span></div><button class="drawer-close" data-drawer="detector" aria-label="Close detector">×</button></div>
+    <div class="drawer-head"><div><strong>DETECTOR</strong><span>Correction tools for difficult or ambiguous hits.</span></div><button class="drawer-close" data-drawer="detector" aria-label="Close detector" ${controlTooltipAttributes("close-detector")}>×</button></div>
     <div class="detector-overview"><div><span class="detect-status">LOCKED</span><strong><span class="source-frequency">196 Hz</span> · <span class="source-note">G3</span></strong></div><span class="threshold-readout">−48 dBFS</span><p>Threshold stays directly on the permanent Input meter. Use Learn only if automatic body selection is wrong.</p></div>
-    <button class="learn-button"><b>LEARN FROM NEXT CLEAN HIT</b></button>
+    <button class="learn-button" ${controlTooltipAttributes("refine")}><b>LEARN FROM NEXT CLEAN HIT</b></button>
     <div class="peak-area"><label>BODY RESONANCE SUGGESTIONS</label><div class="peak-grid"><button class="peak-chip" data-tooltip-param="param4" data-frequency="98"><strong>98 Hz · G2</strong><span>68%</span></button><button class="peak-chip selected" data-tooltip-param="param4" data-frequency="196"><strong>196 Hz · G3</strong><span>94%</span></button><button class="peak-chip" data-tooltip-param="param4" data-frequency="392"><strong>392 Hz · G4</strong><span>76%</span></button><button class="peak-chip" data-tooltip-param="param4" data-frequency="784"><strong>784 Hz · G5</strong><span>51%</span></button></div></div>
     <div class="advanced-grid"><div class="advanced-row"><label>RESONANCES SHOWN</label><div class="segmented" data-endpoint-id="param15"><button data-value="1">1</button><button class="selected" data-value="2">2</button><button data-value="3">3</button><button data-value="4">4</button></div></div><div class="advanced-row"><label>CONTOUR</label><div class="segmented" data-endpoint-id="param13"><button class="selected" data-value="0">RELATIVE</button><button data-value="1">LOCK</button></div></div><div class="advanced-row contour-strength">${parameterSliderHTML("param14", "Contour Strength", "SUBTLE", "FIRM")}</div></div>
   </aside>
 
   <aside class="drawer synth-drawer" data-channel="body" data-available="false">
-    <div class="drawer-head"><div><strong>BODY LAYER / REPLACE</strong><span>Source-following resynthesis after the retuner core is validated.</span></div><button class="drawer-close" data-drawer="synth" aria-label="Close Body Layer">×</button></div>
+    <div class="drawer-head"><div><strong>BODY LAYER / REPLACE</strong><span>Source-following resynthesis after the retuner core is validated.</span></div><button class="drawer-close" data-drawer="synth" aria-label="Close Body Layer" ${controlTooltipAttributes("close-body-layer")}>×</button></div>
     <div class="synth-summary">BODY LAYER · PLANNED</div>
     <div class="segmented synth-route" data-endpoint-id="param2"><button class="selected" data-value="0">OFF</button><button data-value="1">LAYER</button><button data-value="2">REPLACE</button></div>
     <div class="synth-off-note">Not active in this build. The controls stay reserved for the versioned parameter contract.</div>
     <div class="route-controls"><div class="layer-control">${parameterSliderHTML("param30", "Layer Level", "OFF", "+12 dB")}</div><div class="replace-control">${parameterSliderHTML("param9", "Replace Amount", "ORIGINAL", "REPLACED")}</div>${parameterSliderHTML("param28", "Follow", "LOOSE", "TIGHT")}${parameterSliderHTML("param27", "Length", "SHORT", "LONG")}${parameterSliderHTML("param29", "Drive", "CLEAN", "DENSE")}</div>
     <div class="synth-mixer">
-      <div class="synth-channel"><button class="channel-select selected" data-channel="body" aria-pressed="true">BODY</button>${toggleHTML("param31", "POWER")}${parameterSliderHTML("param19", "Level", "0", "100")}</div>
-      <div class="synth-channel disabled"><button class="channel-select" data-channel="noise" aria-pressed="false">NOISE</button>${toggleHTML("param32", "POWER")}${parameterSliderHTML("param22", "Level", "0", "100")}</div>
-      <div class="synth-channel disabled"><button class="channel-select" data-channel="exciter" aria-pressed="false">EXCITER</button>${toggleHTML("param33", "POWER")}${parameterSliderHTML("param25", "Level", "0", "100")}</div>
+      <div class="synth-channel"><button class="channel-select selected" data-channel="body" aria-pressed="true" ${controlTooltipAttributes("inspect-body")}>BODY</button>${toggleHTML("param31", "POWER")}${parameterSliderHTML("param19", "Level", "0", "100")}</div>
+      <div class="synth-channel disabled"><button class="channel-select" data-channel="noise" aria-pressed="false" ${controlTooltipAttributes("inspect-noise")}>NOISE</button>${toggleHTML("param32", "POWER")}${parameterSliderHTML("param22", "Level", "0", "100")}</div>
+      <div class="synth-channel disabled"><button class="channel-select" data-channel="exciter" aria-pressed="false" ${controlTooltipAttributes("inspect-exciter")}>EXCITER</button>${toggleHTML("param33", "POWER")}${parameterSliderHTML("param25", "Level", "0", "100")}</div>
     </div>
     <div class="synth-inspector body-detail"><strong>BODY DETAIL</strong>${parameterSliderHTML("param20", "Character", "PURE", "RICH")}${parameterSliderHTML("param21", "Sub", "LEAN", "DEEP")}</div>
     <div class="synth-inspector noise-detail"><strong>NOISE DETAIL</strong>${parameterSliderHTML("param23", "Color", "DARK", "BRIGHT")}${parameterSliderHTML("param24", "Decay", "SHORT", "LONG")}</div>
     <div class="synth-inspector exciter-detail"><strong>EXCITER DETAIL</strong>${parameterSliderHTML("param26", "Tone", "LOW", "HIGH")}</div>
   </aside>
 
-  ${parameterHelpHTML()}
+  ${tooltipHelpHTML()}
   <div class="parameter-tooltip" role="tooltip" aria-hidden="true" data-open="false" data-placement="above">
     <span class="tooltip-kicker">PARAMETER HELP</span>
     <strong class="tooltip-title"></strong>

@@ -133,6 +133,8 @@ without an explicit signal-flow definition.
 ## Parameter help
 
 - Every one of the 33 numbered parameters has one authoritative tooltip entry.
+- Every visible button also has authoritative contextual help; action buttons use the
+  same hover, keyboard-focus, collision, and accessibility behavior as parameters.
 - Each tooltip states the parameter's purpose, range or choices, default value, and
   the interaction needed to edit it.
 - Tooltips appear after a short pointer-hover delay and immediately on keyboard
@@ -149,7 +151,7 @@ without an explicit signal-flow definition.
 - Focus, Width, direct numeric readouts, segmented choices, power controls, and the
   three synthesis channel levels follow the same help behavior as standard sliders.
 
-## Version 0.2.0 boundaries
+## Version 0.2.1 boundaries
 
 - The standalone browser preview simulates spectrum, meters, confidence, and pitch
   because no Cmajor audio engine exists in that page. The Amorph view receives real
@@ -160,7 +162,7 @@ without an explicit signal-flow definition.
 - Live spectrum frames, multiple resonance proposals, contour processing, and Dual
   analysis remain M2 work. Their nonfunctional controls are disabled outside Preview.
 - Body/Noise/Exciter and Layer/Replace remain M3 work and are disabled outside Preview.
-- The 0.2.0 engine is causal and zero-look-ahead, not phase coherent. A separate
+- The 0.2.x engine is causal and zero-look-ahead, not phase coherent. A separate
   fixed-latency Studio engine is reserved for M4.
 
 ## Acceptance checks
@@ -174,7 +176,8 @@ without an explicit signal-flow definition.
 7. Detector and Synth drawers open and close without changing audio by themselves.
 8. Original / Effect, Tune entry, Threshold drag, Snap, and all enabled controls are functional.
 9. The native responsive surface remains readable and usable at 1280×760, 900×534,
-   and 766×455 without globally scaling down text or hit targets.
+   and 766×455 without globally scaling down text or hit targets. Smaller embedding
+   windows proportionally fit the complete 766×455 compact surface instead of clipping it.
 10. The complete first frame is visible even while JavaScript is paused in the file preview.
 11. All 33 numbered Cmajor parameters have exactly one rendered UI endpoint; none
     exists only in the registry.
@@ -184,3 +187,5 @@ without an explicit signal-flow definition.
 13. The compact global help switch is visible and keyboard-operable at every supported
     host size. OFF suppresses hover/focus bubbles without changing parameter input,
     endpoint count, or persistent accessible descriptions.
+14. Every rendered button resolves to either parameter help or control help, including
+    in the JavaScript-paused preview and while the compact surface is scaled to fit.
