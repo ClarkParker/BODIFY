@@ -1,9 +1,9 @@
 {
   "CmajorVersion": 1,
   "ID": "com.clarkparker.bodify",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "name": "BODIFY",
-  "description": "Phase-coherent drum body retuning and source-following resynthesis.",
+  "description": "Zero-latency drum body retuning with source-following modal resynthesis.",
   "category": "effect",
   "manufacturer": "Clark Parker",
   "isInstrument": false,

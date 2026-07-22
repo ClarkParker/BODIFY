@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="bodify-build-id" content="a1da26a93fd8">
-  <meta name="bodify-ui-sha256" content="a1da26a93fd832d1254bbaf143d5244f616120769f1d4fab816d5848c19e74df">
-  <title>BODIFY UI Prototype — a1da26a93fd8</title>
+  <meta name="bodify-build-id" content="65de2841d547">
+  <meta name="bodify-ui-sha256" content="65de2841d547b8fbdc5d3ef256a02e08c57a0db9541d8156f9226becf63579ea">
+  <title>BODIFY UI Prototype — 65de2841d547</title>
   <style>
     html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #070a0e; }
     body { display: grid; place-items: center; }
@@ -16,7 +16,7 @@
     body.preview-error #preview-error { display: block; }
   </style>
 </head>
-<body data-bodify-build-id="a1da26a93fd8">
+<body data-bodify-build-id="65de2841d547">
   <bodify-ui id="preview-view" data-preview="true">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -413,6 +413,12 @@
     border-color:rgba(200,166,99,.28);
     background:rgba(74,55,22,.2);
   }
+  bodify-ui .advanced-grid[aria-label="Planned M2 detector controls"] {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui button[aria-disabled="true"] { cursor:not-allowed; }
   bodify-ui .compare {
     height:40.28px;
     border-color:rgba(150,179,187,.2);
@@ -1146,14 +1152,14 @@
       inset 0 1px rgba(255,255,255,.075),
       0 16px 34px rgba(0,0,0,.62),
       0 0 0 1px rgba(0,0,0,.4);
-    transform:translateY(4px) scale(.985);
+    transform:translateY(4px);
     transform-origin:center top;
     transition:opacity .09s ease,transform .09s ease,visibility 0s linear .09s;
   }
   bodify-ui .parameter-tooltip[data-open="true"] {
     visibility:visible;
     opacity:1;
-    transform:translateY(0) scale(1);
+    transform:translateY(0);
     transition-delay:0s;
   }
   bodify-ui .chassis[data-tooltips="off"] .parameter-tooltip {
@@ -1390,7 +1396,7 @@
             <i class="pitch-arrow"></i>
             <div class="pitch-node analyzer-target"><label>TARGET</label><strong class="target-frequency">196 Hz</strong><span class="target-note">G3</span></div>
           </div>
-          <div class="band-audition"><button class="focus-solo" data-endpoint-id="param18" data-tooltip-param="param18" data-tooltip-title="Body Solo" data-tooltip="Auditions only the selected body range so the detected resonance can be verified by ear." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Hold Solo for momentary audition · Use Latch to keep it active." aria-pressed="false"><span>BODY SOLO</span><b>HOLD</b></button><button class="solo-lock" data-tooltip-param="param18" aria-label="Pin Body Solo" aria-pressed="false">PIN</button></div>
+          <div class="band-audition"><button class="focus-solo" data-endpoint-id="param18" data-tooltip-param="param18" data-tooltip-title="Body Solo" data-tooltip="Auditions only the selected body range so the detected resonance can be verified by ear." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Hold Body Solo for momentary audition · Click PIN to keep it active." aria-pressed="false"><span>BODY SOLO</span><b>HOLD</b></button><button class="solo-lock" data-tooltip-param="param18" aria-label="Pin Body Solo" aria-pressed="false">PIN</button></div>
           <button class="snap-button" data-endpoint-id="param16" data-tooltip-param="param16" data-tooltip-title="Snap" data-tooltip="Quantizes the shifted body resonance to the nearest equal-tempered semitone." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Click to toggle." aria-pressed="false"><b>SNAP OFF</b></button>
         </div>
         <svg class="spectrum-fallback" viewBox="0 0 800 240" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="spectrumFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#50dccb" stop-opacity=".24"/><stop offset="1" stop-color="#50dccb" stop-opacity="0"/></linearGradient></defs><path class="spectrum-area" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206 L800 240 L0 240Z" fill="url(#spectrumFill)"/><path class="spectrum-line" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206" fill="none" stroke="#50dccb" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
@@ -1522,7 +1528,7 @@
   </div></div>
   </aside>
 
-  <div class="parameter-help-bank"><span id="parameter-help-param1">Original / Effect. Switches between the processed signal and the untouched input for an instant A/B comparison. Effect · Original (bypass) · Default: Effect Choose a mode.</span><span id="parameter-help-param2">Synthesis Routing. Sets the optional synthesis path: Off disables it, Layer adds a generated body, and Replace substitutes the detected body. Off · Layer · Replace · Default: Off Choose a routing mode.</span><span id="parameter-help-param3">Tune. Shifts only the selected body resonance by up to one octave while the transient and remaining spectrum stay untouched. −1200 to +1200 ct · Default: 0 ct Drag vertically · Shift for fine control · Double-click resets · Click the value to type.</span><span id="parameter-help-param4">Focus. Sets the center frequency of the body resonance that is detected, auditioned, and tuned. 35 Hz to 4.0 kHz · Default: 196 Hz Drag the band or choose a resonance suggestion · Click the frequency to type.</span><span id="parameter-help-param5">Width. Sets the processed bandwidth around Focus; narrow isolates precisely, while wide includes more of the drum body. 0.17 to 2.00 oct · Default: 0.75 oct Drag either band edge · Click the value to type.</span><span id="parameter-help-param6">Threshold. Sets the input level above which a drum hit is detected and body processing is triggered. −70 to 0 dBFS · Default: −48 dBFS Drag vertically · Arrow keys adjust · Shift for fine control.</span><span id="parameter-help-param7">Speed. Sets the pitch-shift time constant; lower values react faster, while higher values sound smoother. 15 to 50 ms · Default: 20 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param8">Body Decay. Shortens or lengthens only the shifted body tail; zero preserves its original duration. −100 to +100% · Default: 0% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param9">Replace Amount. Sets how completely the detected original body is replaced by the generated synth body. 0 to 100% · Default: 50% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param10">Shift Trim. Raises or lowers only the shifted body level without changing the rest of the signal. −6.0 to +6.0 dB · Default: 0.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param11">Auto Gain. Compensates processing-related level changes so Original and Effect remain easier to compare fairly. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param12">Output. Controls only the plug-in&#39;s final output level. −24.0 to +12.0 dB · Default: 0.0 dB Drag vertically · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param13">Contour. Chooses whether the detector contour follows the selected body range or stays locked at its current position. Relative · Lock · Default: Relative Choose a contour mode.</span><span id="parameter-help-param14">Contour Strength. Sets how strongly the selected contour shapes resonance selection, from subtle to firm. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param15">Resonances Shown. Sets how many detected resonance candidates are displayed for selection in the Body Map. 1 to 4 · Default: 2 Choose the number of suggestions.</span><span id="parameter-help-param16">Snap. Quantizes the shifted body resonance to the nearest equal-tempered semitone. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param17">Stereo Analysis. Linked analyzes both channels together; Dual analyzes the left and right channels independently. Linked · Dual · Default: Linked Choose an analysis mode.</span><span id="parameter-help-param18">Body Solo. Auditions only the selected body range so the detected resonance can be verified by ear. Off · On · Default: Off Hold Solo for momentary audition · Use Latch to keep it active.</span><span id="parameter-help-param19">Body Level. Sets the level of the generated Body channel. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param20">Body Character. Shapes the generated body from pure and focused toward richer and more complex. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param21">Sub. Adds low-frequency depth to the generated Body channel. 0 to 100% · Default: 15% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param22">Noise Level. Sets the level of the generated Noise channel. 0 to 100% · Default: 25% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param23">Noise Color. Moves the generated Noise channel&#39;s tonal color from dark to bright. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param24">Noise Decay. Sets how long the generated Noise channel rings out after each hit. 20 to 600 ms · Default: 120 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param25">Exciter Level. Sets the level of the generated Exciter channel. 0 to 100% · Default: 12% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param26">Exciter Tone. Sets the tonal frequency focus of the generated Exciter channel. 500 Hz to 8.0 kHz · Default: 2.8 kHz Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param27">Synth Length. Scales the overall duration of the generated synth layers relative to the detected hit. 0.25× to 2.00× · Default: 1.00× Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param28">Follow. Sets how closely the generated synth layers follow the original hit&#39;s envelope and dynamics. 0 to 100% · Default: 80% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param29">Drive. Adds saturation and density to the generated synth layers; lower values stay cleaner. 0 to 100% · Default: 10% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param30">Layer Level. Sets the level of the generated synthesis added in Layer mode. −60.0 to +12.0 dB · Default: −9.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param31">Body Power. Turns the generated Body channel on or off. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param32">Noise Power. Turns the generated Noise channel on or off. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param33">Exciter Power. Turns the generated Exciter channel on or off. Off · On · Default: Off Click to toggle.</span></div>
+  <div class="parameter-help-bank"><span id="parameter-help-param1">Original / Effect. Switches between the processed signal and the untouched input for an instant A/B comparison. Effect · Original (bypass) · Default: Effect Choose a mode.</span><span id="parameter-help-param2">Synthesis Routing. Sets the optional synthesis path: Off disables it, Layer adds a generated body, and Replace substitutes the detected body. Off · Layer · Replace · Default: Off Choose a routing mode.</span><span id="parameter-help-param3">Tune. Shifts only the selected body resonance by up to one octave while the transient and remaining spectrum stay untouched. −1200 to +1200 ct · Default: 0 ct Drag vertically · Shift for fine control · Double-click resets · Click the value to type.</span><span id="parameter-help-param4">Focus. Sets the center frequency of the body resonance that is detected, auditioned, and tuned. 35 Hz to 4.0 kHz · Default: 196 Hz Drag the band or choose a resonance suggestion · Click the frequency to type.</span><span id="parameter-help-param5">Width. Sets the processed bandwidth around Focus; narrow isolates precisely, while wide includes more of the drum body. 0.17 to 2.00 oct · Default: 0.75 oct Drag either band edge · Click the value to type.</span><span id="parameter-help-param6">Threshold. Sets the input level above which a drum hit is detected and body processing is triggered. −70 to 0 dBFS · Default: −48 dBFS Drag vertically · Arrow keys adjust · Shift for fine control.</span><span id="parameter-help-param7">Speed. Sets the pitch-shift time constant; lower values react faster, while higher values sound smoother. 15 to 50 ms · Default: 20 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param8">Body Decay. Shortens or lengthens only the shifted body tail; zero preserves its original duration. −100 to +100% · Default: 0% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param9">Replace Amount. Sets how completely the detected original body is replaced by the generated synth body. 0 to 100% · Default: 50% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param10">Shift Trim. Raises or lowers only the shifted body level without changing the rest of the signal. −6.0 to +6.0 dB · Default: 0.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param11">Auto Gain. Compensates processing-related level changes so Original and Effect remain easier to compare fairly. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param12">Output. Controls only the plug-in&#39;s final output level. −24.0 to +12.0 dB · Default: 0.0 dB Drag vertically · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param13">Contour. Chooses whether the detector contour follows the selected body range or stays locked at its current position. Relative · Lock · Default: Relative Choose a contour mode.</span><span id="parameter-help-param14">Contour Strength. Sets how strongly the selected contour shapes resonance selection, from subtle to firm. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param15">Resonances Shown. Sets how many detected resonance candidates are displayed for selection in the Body Map. 1 to 4 · Default: 2 Choose the number of suggestions.</span><span id="parameter-help-param16">Snap. Quantizes the shifted body resonance to the nearest equal-tempered semitone. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param17">Stereo Analysis. Linked analyzes both channels together; Dual analyzes the left and right channels independently. Linked · Dual · Default: Linked Choose an analysis mode.</span><span id="parameter-help-param18">Body Solo. Auditions only the selected body range so the detected resonance can be verified by ear. Off · On · Default: Off Hold Body Solo for momentary audition · Click PIN to keep it active.</span><span id="parameter-help-param19">Body Level. Sets the level of the generated Body channel. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param20">Body Character. Shapes the generated body from pure and focused toward richer and more complex. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param21">Sub. Adds low-frequency depth to the generated Body channel. 0 to 100% · Default: 15% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param22">Noise Level. Sets the level of the generated Noise channel. 0 to 100% · Default: 25% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param23">Noise Color. Moves the generated Noise channel&#39;s tonal color from dark to bright. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param24">Noise Decay. Sets how long the generated Noise channel rings out after each hit. 20 to 600 ms · Default: 120 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param25">Exciter Level. Sets the level of the generated Exciter channel. 0 to 100% · Default: 12% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param26">Exciter Tone. Sets the tonal frequency focus of the generated Exciter channel. 500 Hz to 8.0 kHz · Default: 2.8 kHz Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param27">Synth Length. Scales the overall duration of the generated synth layers relative to the detected hit. 0.25× to 2.00× · Default: 1.00× Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param28">Follow. Sets how closely the generated synth layers follow the original hit&#39;s envelope and dynamics. 0 to 100% · Default: 80% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param29">Drive. Adds saturation and density to the generated synth layers; lower values stay cleaner. 0 to 100% · Default: 10% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param30">Layer Level. Sets the level of the generated synthesis added in Layer mode. −60.0 to +12.0 dB · Default: −9.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param31">Body Power. Turns the generated Body channel on or off. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param32">Noise Power. Turns the generated Noise channel on or off. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param33">Exciter Power. Turns the generated Exciter channel on or off. Off · On · Default: Off Click to toggle.</span></div>
   <div class="parameter-tooltip" role="tooltip" aria-hidden="true" data-open="false" data-placement="above">
     <span class="tooltip-kicker">PARAMETER HELP</span>
     <strong class="tooltip-title"></strong>
@@ -1531,7 +1537,7 @@
     <span class="tooltip-usage"></span>
   </div>
 </div></bodify-ui>
-  <div id="preview-build" aria-label="Preview build a1da26a93fd8">BUILD a1da26a93fd8</div>
+  <div id="preview-build" aria-label="Preview build 65de2841d547">BUILD 65de2841d547</div>
   <div id="preview-error" role="alert"></div>
   <script>
     window.addEventListener("error", event => {
@@ -1693,7 +1699,7 @@ const PARAM_TOOLTIPS = {
     title: "Body Solo",
     description: "Auditions only the selected body range so the detected resonance can be verified by ear.",
     range: "Off · On · Default: Off",
-    usage: "Hold Solo for momentary audition · Use Latch to keep it active.",
+    usage: "Hold Body Solo for momentary audition · Click PIN to keep it active.",
   },
   param19: {
     title: "Body Level",
@@ -1929,6 +1935,10 @@ class BodifyUI extends HTMLElement {
     this._sent = [];
     this._activeDrawer = null;
     this._soloLatched = false;
+    this._endpointListeners = [];
+    this._analysisState = 0;
+    this._detectedConfidence = 0;
+    this._outputPeakHold = -70;
     this._learnTimer = 0;
     this._peakIndex = 1;
     this._tooltipsEnabled = this._readTooltipPreference(true);
@@ -1971,6 +1981,7 @@ class BodifyUI extends HTMLElement {
     this._wireTooltipToggle();
     this._wireBridge();
     this._setSynthesisAvailability(this._previewMode);
+    this._setM1FeatureAvailability(this._previewMode);
 
     this._resizeCanvas = () => {
       const rect = this._canvas.getBoundingClientRect();
@@ -2011,6 +2022,8 @@ class BodifyUI extends HTMLElement {
     this._soloLatched = false;
     this._activeDrawer = null;
     if (this._pcListener && this.pc?.removeAllParameterListener) this.pc.removeAllParameterListener(this._pcListener);
+    this._endpointListeners.forEach(({ id, listener }) => this.pc?.removeEndpointListener?.(id, listener));
+    this._endpointListeners = [];
     window.removeEventListener("resize", this._resizeFn);
     this._ro?.disconnect();
     if (this._raf) cancelAnimationFrame(this._raf);
@@ -2043,6 +2056,101 @@ class BodifyUI extends HTMLElement {
     };
     this.pc.addAllParameterListener?.(this._pcListener);
     PARAMS.forEach(parameter => this.pc.requestParameterValue?.(parameter.id));
+    this._listenEndpoint("inputMeterOut", value => this._paintInputMeter(value));
+    this._listenEndpoint("outputMeterOut", value => this._paintOutputMeter(value));
+    this._listenEndpoint("gateOut", value => this._paintGate(Number(value) >= 0.5));
+    this._listenEndpoint("confidenceOut", value => this._paintConfidence(Number(value)));
+    this._listenEndpoint("analysisStateOut", value => this._paintAnalysisState(Number(value)));
+    this._listenEndpoint("detectedHzOut", value => this._acceptDetectedFrequency(Number(value)));
+  }
+
+  _listenEndpoint(id, paint) {
+    if (!this.pc?.addEndpointListener) return;
+    const listener = rawValue => paint(rawValue?.value ?? rawValue);
+    this.pc.addEndpointListener(id, listener);
+    this._endpointListeners.push({ id, listener });
+  }
+
+  _stereoEndpointValue(rawValue) {
+    if (Array.isArray(rawValue)) return [Number(rawValue[0]) || 0, Number(rawValue[1]) || 0];
+    if (rawValue && typeof rawValue === "object") {
+      const left = Number(rawValue[0] ?? rawValue.left ?? rawValue.x ?? 0) || 0;
+      const right = Number(rawValue[1] ?? rawValue.right ?? rawValue.y ?? left) || 0;
+      return [left, right];
+    }
+    const mono = Number(rawValue) || 0;
+    return [mono, mono];
+  }
+
+  _linearToDb(value) {
+    return clamp(20 * Math.log10(Math.max(0.000001, Math.abs(Number(value) || 0))), -70, 12);
+  }
+
+  _paintMeter(selector, rawValue) {
+    const values = this._stereoEndpointValue(rawValue);
+    this.querySelectorAll(`${selector} .meter-fill`).forEach((fill, index) => {
+      const db = this._linearToDb(values[index] ?? values[0]);
+      fill.style.height = `${clamp((db + 70) / 70, 0, 1) * 100}%`;
+    });
+    return values;
+  }
+
+  _paintInputMeter(rawValue) {
+    const values = this._paintMeter(".input-meter", rawValue);
+    const db = this._linearToDb(Math.max(...values));
+    this.querySelectorAll(".input-value").forEach(element => element.textContent = `${db.toFixed(1).replace("-", "−")} dBFS`);
+  }
+
+  _paintOutputMeter(rawValue) {
+    const values = this._paintMeter(".output-meter", rawValue);
+    const db = this._linearToDb(Math.max(...values));
+    this._outputPeakHold = Math.max(this._outputPeakHold, db);
+    this.querySelectorAll(".output-peak").forEach(element => element.textContent = `${this._outputPeakHold.toFixed(1).replace("-", "−")} dBFS`);
+  }
+
+  _paintGate(open) {
+    const state = this.querySelector(".gate-state");
+    state?.classList.toggle("open", open);
+    const label = state?.querySelector("span");
+    if (label) label.textContent = open ? "HIT ACTIVE" : "BELOW THRESHOLD";
+  }
+
+  _paintConfidence(value) {
+    this._detectedConfidence = clamp(Number(value) || 0, 0, 1);
+    const chip = this.querySelector(".peak-chip.selected span");
+    if (chip && !this._previewMode) chip.textContent = `${Math.round(this._detectedConfidence * 100)}%`;
+  }
+
+  _paintAnalysisState(rawState) {
+    const state = clamp(Math.round(rawState), 0, 3);
+    this._analysisState = state;
+    const labels = ["ANALYSIS OFFLINE", "LISTENING", "NO LOCK", "BODY LOCKED"];
+    const shortLabels = ["OFFLINE", "LISTENING", "NO LOCK", "LOCKED"];
+    const analysis = this.querySelector(".analysis-state");
+    if (analysis) analysis.innerHTML = `<i></i>${labels[state]}`;
+    const status = this.querySelector(".detect-status");
+    if (status) {
+      status.textContent = shortLabels[state];
+      status.classList.toggle("working", state === 1);
+    }
+    const button = this.querySelector(".learn-button");
+    if (button && !this._previewMode) {
+      button.disabled = state === 1;
+      button.querySelector("b").textContent = state === 1
+        ? "LISTENING FOR NEXT HIT…"
+        : state === 3 ? "REFINE ON NEXT CLEAN HIT" : "LEARN FROM NEXT CLEAN HIT";
+    }
+  }
+
+  _acceptDetectedFrequency(value) {
+    if (!Number.isFinite(value) || value < PARAM.get("param4").min || value > PARAM.get("param4").max) return;
+    if (!this._previewMode && Math.abs(value - this._values.param4) > 0.5) this._setParam("param4", value, true);
+    if (!this._previewMode) {
+      const chip = this.querySelector(".peak-chip.selected");
+      const info = noteInfo(value);
+      const label = chip?.querySelector("strong");
+      if (label) label.textContent = `${formatFrequency(value)} · ${info.name}`;
+    }
   }
 
   _send(id, value) {
@@ -2740,6 +2848,7 @@ class BodifyUI extends HTMLElement {
     const button = this.querySelector(".clip-reset");
     if (!button) return;
     button.addEventListener("click", () => {
+      this._outputPeakHold = -70;
       this._clipResetUntil = performance.now() + 900;
       button.classList.add("cleared");
       button.querySelector(".output-peak").textContent = "CLEARED";
@@ -2801,6 +2910,35 @@ class BodifyUI extends HTMLElement {
     });
     const summary = drawer.querySelector(".synth-summary");
     if (!available && summary) summary.textContent = "BODY LAYER · PLANNED";
+  }
+
+  _setM1FeatureAvailability(preview) {
+    if (preview) return;
+
+    const detectorNote = this.querySelector(".detector-overview p");
+    if (detectorNote) detectorNote.textContent = "M1 locks the selected body from the next clean hit. Multi-peak proposals and contour controls follow in M2.";
+
+    this.querySelectorAll(".peak-chip:not(.selected)").forEach(chip => {
+      chip.hidden = true;
+      chip.disabled = true;
+    });
+    const peakLabel = this.querySelector(".peak-area > label");
+    if (peakLabel) peakLabel.textContent = "DETECTED BODY";
+
+    const advanced = this.querySelector(".advanced-grid");
+    advanced?.setAttribute("aria-label", "Planned M2 detector controls");
+    advanced?.querySelectorAll("button, [role='slider'], [role='textbox']").forEach(control => {
+      control.setAttribute("aria-disabled", "true");
+      if ("disabled" in control) control.disabled = true;
+      if (control.hasAttribute("tabindex")) control.tabIndex = -1;
+    });
+
+    const dual = this.querySelector('.segmented[data-endpoint-id="param17"] button[data-value="1"]');
+    if (dual) {
+      dual.disabled = true;
+      dual.setAttribute("aria-disabled", "true");
+      dual.title = "Dual-channel analysis is planned for M2";
+    }
   }
 
   _wireDrawers() {
@@ -3378,6 +3516,12 @@ class BodifyUI extends HTMLElement {
     border-color:rgba(200,166,99,.28);
     background:rgba(74,55,22,.2);
   }
+  bodify-ui .advanced-grid[aria-label="Planned M2 detector controls"] {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui button[aria-disabled="true"] { cursor:not-allowed; }
   bodify-ui .compare {
     height:40.28px;
     border-color:rgba(150,179,187,.2);
@@ -4111,14 +4255,14 @@ class BodifyUI extends HTMLElement {
       inset 0 1px rgba(255,255,255,.075),
       0 16px 34px rgba(0,0,0,.62),
       0 0 0 1px rgba(0,0,0,.4);
-    transform:translateY(4px) scale(.985);
+    transform:translateY(4px);
     transform-origin:center top;
     transition:opacity .09s ease,transform .09s ease,visibility 0s linear .09s;
   }
   bodify-ui .parameter-tooltip[data-open="true"] {
     visibility:visible;
     opacity:1;
-    transform:translateY(0) scale(1);
+    transform:translateY(0);
     transition-delay:0s;
   }
   bodify-ui .chassis[data-tooltips="off"] .parameter-tooltip {

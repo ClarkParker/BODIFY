@@ -56,7 +56,7 @@ or shortened without becoming a reference source for another track.
 
 - Large Resonance Map with detected and shifted body readouts
 - Draggable Focus band with visible Width handles
-- Momentary Body Solo with adjacent Lock
+- Momentary Body Solo with adjacent PIN
 - Optional chromatic Snap
 - Focus is moved directly by dragging the selected band in the Body Map
 - Width is changed only at the two visible band-edge handles
@@ -124,7 +124,7 @@ without an explicit signal-flow definition.
 - Click any value, including the large Tune and Output values, for exact entry.
 - Drag Threshold directly in the Detector input meter.
 - Drag the Resonance Map to move Focus; drag a band edge to change Width.
-- Body Solo is active only while held; Lock makes it persistent.
+- Body Solo is active only while held; PIN makes it persistent.
 - Snap quantizes the shifted body to an equal-tempered semitone.
 - Original and Effect map to explicit global bypass states.
 - All sound-changing controls round-trip through numbered Amorph parameters.
@@ -149,13 +149,19 @@ without an explicit signal-flow definition.
 - Focus, Width, direct numeric readouts, segmented choices, power controls, and the
   three synthesis channel levels follow the same help behavior as standard sliders.
 
-## Prototype limitations
+## Version 0.2.0 boundaries
 
-- Spectrum, meters, input level, confidence, and learned pitch are simulated only by
-  the standalone preview adapter; the Amorph view has no invented live audio feed.
-- Current implementation status is tracked in `PRODUCT_CONCEPT.md` and the README.
-  No future control is presented as active before its DSP path exists.
-- Retuning, analysis frames, detected-pitch events, and latency are not implemented.
+- The standalone browser preview simulates spectrum, meters, confidence, and pitch
+  because no Cmajor audio engine exists in that page. The Amorph view receives real
+  input/output meters, gate, detected frequency, confidence, and analysis state from
+  the DSP and never falls back to the preview simulation.
+- Retuning, Threshold/gate, Focus/Width, Speed, Shift Trim, Body Decay, Snap, Body
+  Solo/PIN, Auto Gain, Output, and Original/Effect are functional.
+- Live spectrum frames, multiple resonance proposals, contour processing, and Dual
+  analysis remain M2 work. Their nonfunctional controls are disabled outside Preview.
+- Body/Noise/Exciter and Layer/Replace remain M3 work and are disabled outside Preview.
+- The 0.2.0 engine is causal and zero-look-ahead, not phase coherent. A separate
+  fixed-latency Studio engine is reserved for M4.
 
 ## Acceptance checks
 
@@ -166,7 +172,7 @@ without an explicit signal-flow definition.
 5. Speed, Shift Trim, and Body Decay remain visible on the main surface.
 6. The Output control is a readable vertical fader directly beside its meter, not a miniature knob.
 7. Detector and Synth drawers open and close without changing audio by themselves.
-8. Original / Effect, Tune entry, Threshold drag, Snap, and module power are functional.
+8. Original / Effect, Tune entry, Threshold drag, Snap, and all enabled controls are functional.
 9. The native responsive surface remains readable and usable at 1280×760, 900×534,
    and 766×455 without globally scaling down text or hit targets.
 10. The complete first frame is visible even while JavaScript is paused in the file preview.

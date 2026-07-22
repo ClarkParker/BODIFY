@@ -5,6 +5,9 @@ Concept version: 0.1
 Repository baseline: `965f20d12e2edfab32c0b59102028a8740096293`  
 Amorph DEV Kit baseline: `a1d450c8311aebbe9bf887b93b3eea80082db71c`
 
+Implementation status: M0 complete; M1 functional checkpoint at plug-in version
+0.2.0. M2/M3 controls remain visibly disabled until their DSP paths exist.
+
 ## 1. Product position
 
 BODIFY is a drum-body retuner for studio production. Its first obligation is to
@@ -180,15 +183,15 @@ phase-coherent Studio mode is a separate milestone.
 Analysis runs at host sample rate and is throttled before it crosses the UI bridge.
 The DSP appends non-automatable output endpoints; existing parameters are untouched.
 
-| Endpoint | Payload | Target rate | Meaning |
-|---|---|---:|---|
-| `inputMeterOut` | stereo linear peaks | 30 Hz | pre-processing input |
-| `outputMeterOut` | stereo linear peaks | 30 Hz | post-output-gain level |
-| `gateOut` | float 0/1 | on change | body processing state |
-| `detectedHzOut` | float | on accepted hit | detector result |
-| `confidenceOut` | float 0..1 | on accepted hit | peak separation/reliability |
-| `analysisStateOut` | int | on change | offline/listening/no-lock/locked |
-| `spectrumOut` | fixed spectrum frame | 20-30 Hz | real Body Map energy |
+| Endpoint | Payload | Target rate | Status | Meaning |
+|---|---|---:|---|---|
+| `inputMeterOut` | stereo linear peaks | 30 Hz | 0.2.0 | pre-processing input |
+| `outputMeterOut` | stereo linear peaks | 30 Hz | 0.2.0 | post-output-gain level |
+| `gateOut` | float 0/1 | 30 Hz | 0.2.0 | body processing state |
+| `detectedHzOut` | float | 30 Hz | 0.2.0 | most recently accepted hit |
+| `confidenceOut` | float 0..1 | 30 Hz | 0.2.0 | detector reliability |
+| `analysisStateOut` | int | 30 Hz | 0.2.0 | offline/listening/no-lock/locked |
+| `spectrumOut` | fixed spectrum frame | 20-30 Hz | M2 | real Body Map energy |
 
 `Refine on Next Clean Hit` needs a DSP command endpoint appended after the stable
 parameter contract or a dedicated event endpoint. It transitions to `LISTENING` and
@@ -219,6 +222,11 @@ The current 33-parameter set remains below Amorph's documented safe line of 50.
 - Tune, Focus, Width, Speed, Shift Trim, Body Decay, Snap, Body Solo;
 - Linked stereo analysis;
 - real detected-frequency/confidence events.
+
+Checkpoint 0.2.0 implements these items with one shared linked detector. Auto Gain
+was also brought forward from M2 because it could be bounded and covered by the same
+audio path. This is an engineering checkpoint, not a claim that every V1 acceptance
+test or the phase-coherent Studio target is complete.
 
 ### M2 — Reliability
 

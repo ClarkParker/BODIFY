@@ -6,7 +6,11 @@
     "preview:build": "node tools/build_preview.mjs",
     "preview:render": "node tools/build_preview.mjs && node tools/render_preview.mjs",
     "preview:matrix": "node tools/build_preview.mjs && node tools/render_matrix.mjs",
-    "preview:release": "node tools/release_preview.mjs"
+    "preview:release": "node tools/release_preview.mjs",
+    "test:contract": "node tools/check_contract.mjs",
+    "test:fixtures": "node tests/generate_audio_fixtures.mjs",
+    "test:audio": "node tests/analyze_audio_regression.mjs",
+    "test:cmajor": "cmaj test tests"
   },
   "devDependencies": {
     "@sparticuz/chromium": "149.0.0",

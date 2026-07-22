@@ -1,12 +1,92 @@
 /*
-    BODIFY UI prototype DSP.
+    BODIFY — zero-latency drum body retuner for Amorph.
 
-    This processor is intentionally audio-transparent. Its only purpose is to expose
-    the provisional V1 parameter contract while the product workflow and GUI are
-    evaluated. No retuning or resynthesis algorithm is implemented here.
+    Version history:
+    0.1.0  Stable 33-parameter UI contract with transparent audio.
+    0.2.0  M1 modal retuner: gate, two body modes, tune/trim/decay,
+           Body Solo, Snap, Auto Gain, output gain, and telemetry.
+
+    The optional Body/Noise/Exciter layer parameters remain reserved until M3.
+    Their endpoint numbers and meanings are intentionally preserved.
 */
 
-processor BodifyDSP [[ main ]]
+namespace BodifyCore
+{
+    struct SVF
+    {
+        float ic1, ic2;
+    }
+
+    struct SVFOut
+    {
+        float lp, bp, hp;
+    }
+
+    struct Follower
+    {
+        float env;
+    }
+
+    SVFOut processSVF (SVF& state, float x, float cutoffHz, float q, float sampleRate)
+    {
+        let hz = clamp (cutoffHz, 20.0f, sampleRate * 0.45f);
+        let g = float (tan (float64 (pi) * float64 (hz) / float64 (sampleRate)));
+        let k = 1.0f / max (q, 0.1f);
+        let a1 = 1.0f / (1.0f + g * (g + k));
+        let a2 = g * a1;
+        let a3 = g * a2;
+        let v3 = x - state.ic2;
+        let v1 = a1 * state.ic1 + a2 * v3;
+        let v2 = state.ic2 + a2 * state.ic1 + a3 * v3;
+
+        state.ic1 = 2.0f * v1 - state.ic1;
+        state.ic2 = 2.0f * v2 - state.ic2;
+
+        SVFOut result;
+        result.lp = v2;
+        result.bp = v1;
+        result.hp = x - k * v1 - v2;
+        return result;
+    }
+
+    float timeCoeff (float milliseconds, float sampleRate)
+    {
+        let seconds = max (milliseconds, 0.01f) * 0.001f;
+        return float (exp (-1.0 / (float64 (seconds) * float64 (sampleRate))));
+    }
+
+    float follow (Follower& state, float magnitude, float attackCoeff, float releaseCoeff)
+    {
+        let coefficient = magnitude > state.env ? attackCoeff : releaseCoeff;
+        state.env = coefficient * state.env + (1.0f - coefficient) * magnitude;
+        return state.env;
+    }
+
+    float dbToGain (float decibels)
+    {
+        return float (std::levels::dBtoGain (float64 (decibels)));
+    }
+
+    float pitchRatio (float cents)
+    {
+        return float (pow (2.0, float64 (cents) / 1200.0));
+    }
+
+    float snappedTarget (float sourceHz, float tuneCents)
+    {
+        let safeSource = max (sourceHz, 1.0f);
+        let sourceNote = 69.0 + 12.0 * log (float64 (safeSource / 440.0f)) / log (2.0);
+        let targetNote = floor (sourceNote + float64 (tuneCents) / 100.0 + 0.5);
+        return float (440.0 * pow (2.0, (targetNote - 69.0) / 12.0));
+    }
+
+    float clampFiniteAudio (float x)
+    {
+        return clamp (x, -8.0f, 8.0f);
+    }
+}
+
+processor BodifyDSP
 {
     input  stream float<2> in;
     output stream float<2> out;
@@ -45,45 +125,320 @@ processor BodifyDSP [[ main ]]
     input event float param32 [[ name: "Noise Enable",     min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
     input event float param33 [[ name: "Exciter Enable",   min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
 
-    event param1  (float v) {}
-    event param2  (float v) {}
-    event param3  (float v) {}
-    event param4  (float v) {}
-    event param5  (float v) {}
-    event param6  (float v) {}
-    event param7  (float v) {}
-    event param8  (float v) {}
-    event param9  (float v) {}
-    event param10 (float v) {}
-    event param11 (float v) {}
-    event param12 (float v) {}
-    event param13 (float v) {}
-    event param14 (float v) {}
-    event param15 (float v) {}
-    event param16 (float v) {}
-    event param17 (float v) {}
-    event param18 (float v) {}
-    event param19 (float v) {}
-    event param20 (float v) {}
-    event param21 (float v) {}
-    event param22 (float v) {}
-    event param23 (float v) {}
-    event param24 (float v) {}
-    event param25 (float v) {}
-    event param26 (float v) {}
-    event param27 (float v) {}
-    event param28 (float v) {}
-    event param29 (float v) {}
-    event param30 (float v) {}
-    event param31 (float v) {}
-    event param32 (float v) {}
-    event param33 (float v) {}
+    input event float refineRequest;
+
+    output event float<2> inputMeterOut;
+    output event float<2> outputMeterOut;
+    output event float gateOut;
+    output event float detectedHzOut;
+    output event float confidenceOut;
+    output event int analysisStateOut;
+
+    float bypassTarget = 0.0f;
+    float synthRouting = 0.0f;
+    float tuneTarget = 0.0f;
+    float focusTarget = 196.0f;
+    float widthTarget = 0.75f;
+    float thresholdDb = -48.0f;
+    float speedMs = 20.0f;
+    float bodyDecay = 0.0f;
+    float replaceAmount = 0.5f;
+    float shiftTrimDb = 0.0f;
+    float autoGainEnabled = 1.0f;
+    float outputDbTarget = 0.0f;
+    float contourMode = 0.0f;
+    float contourStrength = 0.35f;
+    float resonanceCount = 2.0f;
+    float snapEnabled = 0.0f;
+    float stereoMode = 0.0f;
+    float focusSolo = 0.0f;
+    float synthBody = 0.55f;
+    float bodyCharacter = 0.35f;
+    float subAmount = 0.15f;
+    float noiseAmount = 0.25f;
+    float noiseColor = 0.55f;
+    float noiseDecayMs = 120.0f;
+    float exciterAmount = 0.12f;
+    float exciterToneHz = 2800.0f;
+    float synthLength = 1.0f;
+    float followAmount = 0.8f;
+    float driveAmount = 0.1f;
+    float layerLevelDb = -9.0f;
+    float bodyEnabled = 1.0f;
+    float noiseEnabled = 0.0f;
+    float exciterEnabled = 0.0f;
+
+    float bypassMix = 0.0f;
+    float tuneCents = 0.0f;
+    float focusHz = 196.0f;
+    float widthOctaves = 0.75f;
+    float outputDb = 0.0f;
+    float effectMix = 0.0f;
+    float gateMix = 0.0f;
+    float autoGain = 1.0f;
+    float dryEnergy = 0.0f;
+    float wetEnergy = 0.0f;
+
+    BodifyCore::SVF sourcePrimaryL;
+    BodifyCore::SVF sourcePrimaryR;
+    BodifyCore::SVF sourceSecondaryL;
+    BodifyCore::SVF sourceSecondaryR;
+    BodifyCore::Follower inputFollower;
+    BodifyCore::Follower primaryEnvelopeL;
+    BodifyCore::Follower primaryEnvelopeR;
+    BodifyCore::Follower secondaryEnvelopeL;
+    BodifyCore::Follower secondaryEnvelopeR;
+
+    float64 primaryPhase = 0.0;
+    float64 secondaryPhase = 0.0;
+    bool gateIsOpen = false;
+    bool refinePending = true;
+    bool analysisRunning = false;
+    int analysisState = 1;
+    int analysisSamples = 0;
+    int analysisCrossings = 0;
+    int analysisFirstCrossing = 0;
+    int analysisLastCrossing = 0;
+    int analysisWindow = 0;
+    float analysisPeak = 0.0f;
+    float previousAnalysisSample = 0.0f;
+    float detectedHz = 196.0f;
+    float confidence = 0.0f;
+
+    int meterCounter = 0;
+    float inputPeakL = 0.0f;
+    float inputPeakR = 0.0f;
+    float outputPeakL = 0.0f;
+    float outputPeakR = 0.0f;
+
+    event param1  (float v) { bypassTarget = v >= 0.5f ? 1.0f : 0.0f; }
+    event param2  (float v) { synthRouting = clamp (v, 0.0f, 2.0f); }
+    event param3  (float v) { tuneTarget = clamp (v, -1200.0f, 1200.0f); }
+    event param4  (float v) { focusTarget = clamp (v, 35.0f, 4000.0f); }
+    event param5  (float v) { widthTarget = clamp (v, 0.17f, 2.0f); }
+    event param6  (float v) { thresholdDb = clamp (v, -70.0f, 0.0f); }
+    event param7  (float v) { speedMs = clamp (v, 15.0f, 50.0f); }
+    event param8  (float v) { bodyDecay = clamp (v, -100.0f, 100.0f); }
+    event param9  (float v) { replaceAmount = clamp (v, 0.0f, 1.0f); }
+    event param10 (float v) { shiftTrimDb = clamp (v, -6.0f, 6.0f); }
+    event param11 (float v) { autoGainEnabled = v >= 0.5f ? 1.0f : 0.0f; }
+    event param12 (float v) { outputDbTarget = clamp (v, -24.0f, 12.0f); }
+    event param13 (float v) { contourMode = v >= 0.5f ? 1.0f : 0.0f; }
+    event param14 (float v) { contourStrength = clamp (v, 0.0f, 1.0f); }
+    event param15 (float v) { resonanceCount = clamp (v, 1.0f, 4.0f); }
+    event param16 (float v) { snapEnabled = v >= 0.5f ? 1.0f : 0.0f; }
+    event param17 (float v) { stereoMode = v >= 0.5f ? 1.0f : 0.0f; }
+    event param18 (float v) { focusSolo = v >= 0.5f ? 1.0f : 0.0f; }
+    event param19 (float v) { synthBody = clamp (v, 0.0f, 1.0f); }
+    event param20 (float v) { bodyCharacter = clamp (v, 0.0f, 1.0f); }
+    event param21 (float v) { subAmount = clamp (v, 0.0f, 1.0f); }
+    event param22 (float v) { noiseAmount = clamp (v, 0.0f, 1.0f); }
+    event param23 (float v) { noiseColor = clamp (v, 0.0f, 1.0f); }
+    event param24 (float v) { noiseDecayMs = clamp (v, 20.0f, 600.0f); }
+    event param25 (float v) { exciterAmount = clamp (v, 0.0f, 1.0f); }
+    event param26 (float v) { exciterToneHz = clamp (v, 500.0f, 8000.0f); }
+    event param27 (float v) { synthLength = clamp (v, 0.25f, 2.0f); }
+    event param28 (float v) { followAmount = clamp (v, 0.0f, 1.0f); }
+    event param29 (float v) { driveAmount = clamp (v, 0.0f, 1.0f); }
+    event param30 (float v) { layerLevelDb = clamp (v, -60.0f, 12.0f); }
+    event param31 (float v) { bodyEnabled = v >= 0.5f ? 1.0f : 0.0f; }
+    event param32 (float v) { noiseEnabled = v >= 0.5f ? 1.0f : 0.0f; }
+    event param33 (float v) { exciterEnabled = v >= 0.5f ? 1.0f : 0.0f; }
+
+    event refineRequest (float v)
+    {
+        if (v >= 0.5f)
+        {
+            refinePending = true;
+            analysisRunning = false;
+            analysisState = 1;
+        }
+    }
 
     void main()
     {
+        let sampleRate = float (processor.frequency);
+        let parameterCoeff = BodifyCore::timeCoeff (10.0f, sampleRate);
+        let bypassCoeff = BodifyCore::timeCoeff (5.0f, sampleRate);
+        let energyCoeff = BodifyCore::timeCoeff (180.0f, sampleRate);
+        let autoGainCoeff = BodifyCore::timeCoeff (500.0f, sampleRate);
+        let meterInterval = max (1, int (sampleRate / 30.0f));
+        // 100 ms provides at least three positive zero-crossings at the
+        // supported 35 Hz lower bound while remaining quick enough for Learn.
+        analysisWindow = max (128, int (sampleRate * 0.100f));
+
         loop
         {
-            out <- in;
+            let inputL = in[0];
+            let inputR = in[1];
+            let inputMagnitude = max (abs (inputL), abs (inputR));
+
+            bypassMix = bypassCoeff * bypassMix + (1.0f - bypassCoeff) * bypassTarget;
+            tuneCents = parameterCoeff * tuneCents + (1.0f - parameterCoeff) * tuneTarget;
+            focusHz = parameterCoeff * focusHz + (1.0f - parameterCoeff) * focusTarget;
+            widthOctaves = parameterCoeff * widthOctaves + (1.0f - parameterCoeff) * widthTarget;
+            outputDb = parameterCoeff * outputDb + (1.0f - parameterCoeff) * outputDbTarget;
+
+            let inputAttack = BodifyCore::timeCoeff (0.5f, sampleRate);
+            let inputRelease = BodifyCore::timeCoeff (60.0f, sampleRate);
+            let inputEnvelope = BodifyCore::follow (inputFollower, inputMagnitude, inputAttack, inputRelease);
+            let thresholdGain = BodifyCore::dbToGain (thresholdDb);
+            let shouldOpen = gateIsOpen ? inputEnvelope >= thresholdGain * 0.65f
+                                        : inputEnvelope >= thresholdGain;
+
+            if (shouldOpen && ! gateIsOpen)
+            {
+                gateIsOpen = true;
+                primaryPhase = 0.0;
+                secondaryPhase = 0.0;
+                if (refinePending)
+                {
+                    analysisRunning = true;
+                    analysisSamples = 0;
+                    analysisCrossings = 0;
+                    analysisFirstCrossing = 0;
+                    analysisLastCrossing = 0;
+                    analysisPeak = 0.0f;
+                    previousAnalysisSample = 0.0f;
+                    analysisState = 1;
+                }
+            }
+            else if (! shouldOpen && gateIsOpen)
+            {
+                gateIsOpen = false;
+            }
+
+            let gateTarget = gateIsOpen ? 1.0f : 0.0f;
+            let gateCoeff = BodifyCore::timeCoeff (speedMs, sampleRate);
+            gateMix = gateCoeff * gateMix + (1.0f - gateCoeff) * gateTarget;
+
+            let filterQ = clamp (1.0f / max (widthOctaves, 0.17f), 0.5f, 6.0f);
+            let secondaryHz = min (focusHz * 2.0f, sampleRate * 0.42f);
+            let primaryL = BodifyCore::processSVF (sourcePrimaryL, inputL, focusHz, filterQ, sampleRate).bp;
+            let primaryR = BodifyCore::processSVF (sourcePrimaryR, inputR, focusHz, filterQ, sampleRate).bp;
+            let secondaryL = BodifyCore::processSVF (sourceSecondaryL, inputL, secondaryHz, max (0.5f, filterQ * 0.7f), sampleRate).bp;
+            let secondaryR = BodifyCore::processSVF (sourceSecondaryR, inputR, secondaryHz, max (0.5f, filterQ * 0.7f), sampleRate).bp;
+            let sourceBodyL = primaryL + secondaryL * 0.35f;
+            let sourceBodyR = primaryR + secondaryR * 0.35f;
+            let analysisSample = (primaryL + primaryR) * 0.5f;
+
+            if (analysisRunning)
+            {
+                analysisSamples += 1;
+                analysisPeak = max (analysisPeak, abs (analysisSample));
+                if (previousAnalysisSample <= 0.0f && analysisSample > 0.0f)
+                {
+                    if (analysisCrossings == 0)
+                        analysisFirstCrossing = analysisSamples;
+                    analysisLastCrossing = analysisSamples;
+                    analysisCrossings += 1;
+                }
+                previousAnalysisSample = analysisSample;
+
+                if (analysisSamples >= analysisWindow)
+                {
+                    analysisRunning = false;
+                    refinePending = false;
+                    let measuredFrames = max (1, analysisLastCrossing - analysisFirstCrossing);
+                    let measured = float (analysisCrossings - 1) * sampleRate / float (measuredFrames);
+                    if (analysisCrossings >= 3 && measured >= 35.0f && measured <= 4000.0f
+                        && analysisPeak >= thresholdGain * 0.12f)
+                    {
+                        detectedHz = measured;
+                        confidence = clamp (analysisPeak / max (thresholdGain, 0.000001f) * 0.18f, 0.2f, 1.0f);
+                        analysisState = 3;
+                    }
+                    else
+                    {
+                        confidence = 0.0f;
+                        analysisState = 2;
+                    }
+                }
+            }
+
+            let decayScale = float (pow (4.0, float64 (bodyDecay) / 100.0));
+            let bodyAttackCoeff = BodifyCore::timeCoeff (1.0f, sampleRate);
+            let bodyReleaseCoeff = BodifyCore::timeCoeff (speedMs * decayScale, sampleRate);
+            let primaryEnvL = BodifyCore::follow (primaryEnvelopeL, abs (primaryL), bodyAttackCoeff, bodyReleaseCoeff);
+            let primaryEnvR = BodifyCore::follow (primaryEnvelopeR, abs (primaryR), bodyAttackCoeff, bodyReleaseCoeff);
+            let secondaryEnvL = BodifyCore::follow (secondaryEnvelopeL, abs (secondaryL), bodyAttackCoeff, bodyReleaseCoeff);
+            let secondaryEnvR = BodifyCore::follow (secondaryEnvelopeR, abs (secondaryR), bodyAttackCoeff, bodyReleaseCoeff);
+
+            let unsnappedTargetHz = focusHz * BodifyCore::pitchRatio (tuneCents);
+            var targetHz = snapEnabled >= 0.5f ? BodifyCore::snappedTarget (focusHz, tuneCents)
+                                               : unsnappedTargetHz;
+            targetHz = clamp (targetHz, 20.0f, sampleRate * 0.42f);
+            let targetSecondaryHz = min (targetHz * 2.0f, sampleRate * 0.42f);
+
+            primaryPhase += float64 (targetHz) / float64 (sampleRate);
+            secondaryPhase += float64 (targetSecondaryHz) / float64 (sampleRate);
+            if (primaryPhase >= 1.0) primaryPhase -= 1.0;
+            if (secondaryPhase >= 1.0) secondaryPhase -= 1.0;
+
+            let primaryOscillator = float (sin (primaryPhase * twoPi));
+            let secondaryOscillator = float (sin (secondaryPhase * twoPi));
+            let targetBodyL = primaryOscillator * primaryEnvL * 1.55f
+                            + secondaryOscillator * secondaryEnvL * 0.54f;
+            let targetBodyR = primaryOscillator * primaryEnvR * 1.55f
+                            + secondaryOscillator * secondaryEnvR * 0.54f;
+
+            let trimGain = BodifyCore::dbToGain (shiftTrimDb);
+            let changesShape = abs (tuneCents) >= 0.5f
+                            || abs (shiftTrimDb) >= 0.01f
+                            || abs (bodyDecay) >= 0.1f;
+            let effectTarget = changesShape ? 1.0f : 0.0f;
+            effectMix = parameterCoeff * effectMix + (1.0f - parameterCoeff) * effectTarget;
+
+            let shiftedBodyL = abs (tuneCents) < 0.5f && abs (bodyDecay) < 0.1f
+                             ? sourceBodyL * trimGain
+                             : targetBodyL * trimGain;
+            let shiftedBodyR = abs (tuneCents) < 0.5f && abs (bodyDecay) < 0.1f
+                             ? sourceBodyR * trimGain
+                             : targetBodyR * trimGain;
+            let processAmount = gateMix * effectMix;
+            var processedL = inputL + (shiftedBodyL - sourceBodyL) * processAmount;
+            var processedR = inputR + (shiftedBodyR - sourceBodyR) * processAmount;
+
+            if (focusSolo >= 0.5f)
+            {
+                processedL = changesShape ? shiftedBodyL : sourceBodyL;
+                processedR = changesShape ? shiftedBodyR : sourceBodyR;
+            }
+
+            dryEnergy = energyCoeff * dryEnergy + (1.0f - energyCoeff) * (inputL * inputL + inputR * inputR);
+            wetEnergy = energyCoeff * wetEnergy + (1.0f - energyCoeff) * (processedL * processedL + processedR * processedR);
+            var desiredAutoGain = 1.0f;
+            if (autoGainEnabled >= 0.5f && wetEnergy > 0.000000001f && dryEnergy > 0.000000001f)
+                desiredAutoGain = clamp (float (sqrt (float64 (dryEnergy / wetEnergy))), 0.5012f, 1.9953f);
+            autoGain = autoGainCoeff * autoGain + (1.0f - autoGainCoeff) * desiredAutoGain;
+
+            let outputGain = BodifyCore::dbToGain (outputDb);
+            let effectedL = BodifyCore::clampFiniteAudio (processedL * autoGain * outputGain);
+            let effectedR = BodifyCore::clampFiniteAudio (processedR * autoGain * outputGain);
+            let outputL = effectedL * (1.0f - bypassMix) + inputL * bypassMix;
+            let outputR = effectedR * (1.0f - bypassMix) + inputR * bypassMix;
+
+            inputPeakL = max (inputPeakL, abs (inputL));
+            inputPeakR = max (inputPeakR, abs (inputR));
+            outputPeakL = max (outputPeakL, abs (outputL));
+            outputPeakR = max (outputPeakR, abs (outputR));
+            meterCounter += 1;
+            if (meterCounter >= meterInterval)
+            {
+                inputMeterOut <- float<2> (inputPeakL, inputPeakR);
+                outputMeterOut <- float<2> (outputPeakL, outputPeakR);
+                gateOut <- gateIsOpen ? 1.0f : 0.0f;
+                detectedHzOut <- detectedHz;
+                confidenceOut <- confidence;
+                analysisStateOut <- analysisState;
+                meterCounter = 0;
+                inputPeakL = 0.0f;
+                inputPeakR = 0.0f;
+                outputPeakL = 0.0f;
+                outputPeakR = 0.0f;
+            }
+
+            out <- float<2> (outputL, outputR);
             advance();
         }
     }

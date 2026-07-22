@@ -8,6 +8,10 @@ single rotary hero control, and Speed, Shift Trim, and Body Decay are large line
 work controls. Detector correction and future Body Layer/Replace processing live in
 optional drawers and do not occupy the normal working surface.
 
+Version 0.2.0 is the first functional M1 audio checkpoint. It implements the
+zero-latency modal retuner and real DSP telemetry; it does not claim the later
+phase-coherent Studio engine or the planned Body/Noise/Exciter layers.
+
 ## Files
 
 - `Bodify.cmajorpatch` — Amorph/Cmajor patch manifest
@@ -16,8 +20,32 @@ optional drawers and do not occupy the normal working surface.
 - `preview.html` — generated, self-contained browser preview with a mock patch connection
 - `tools/build_preview.mjs` — rebuilds the standalone preview from `BodifyUI.js`
 - `tools/render_preview.mjs` — renders and smoke-tests the real interactive UI
+- `tools/check_contract.mjs` — verifies the frozen parameter and telemetry contract
+- `tests/BodifyCore.cmajtest` — Cmajor math and stability tests
+- `tests/BodifyAudio.cmajtest` — deterministic audio Golden File regression tests
 - `docs/UX_SPEC.md` — current workflow and interaction specification
 - `docs/PRODUCT_CONCEPT.md` — product scope, DSP architecture, milestones, and tests
+- `docs/CHANGELOG.md` — versioned implementation history
+
+## DSP status — 0.2.0
+
+Implemented and connected end-to-end:
+
+- Threshold gate with hysteresis that never mutes the dry signal
+- Focus/Width body extraction with primary and secondary modes
+- Tune from -1200 to +1200 cents, Speed, Shift Trim, and Body Decay
+- chromatic Snap, Body Solo/PIN, Auto Gain, Output, and smoothed Original/Effect
+- linked stereo amplitudes/residuals with one shared detector
+- real input/output meters, gate, detected frequency, confidence, and analysis state
+- explicit `LISTENING`, `NO LOCK`, and `BODY LOCKED` UI states
+
+Deliberately unavailable outside Preview mode until M2/M3:
+
+- Dual-channel analysis, multi-peak proposals, contour editing, and live spectrum
+- Body/Noise/Exciter generation and Layer/Replace routing
+
+M1 is causal and adds no look-ahead buffer latency. It is not phase coherent. The
+separate fixed-latency Studio engine remains an M4 target.
 
 ## Preview
 
@@ -35,8 +63,9 @@ python3 -m http.server 8080
 ```
 
 The standalone preview explicitly enables simulated spectrum and meter data to
-support UI evaluation before the analysis engine exists. The Amorph view itself
-does not animate invented audio data when no DSP output endpoint is available.
+support UI evaluation in an ordinary browser without an audio engine. The Amorph
+view itself listens only to real DSP output endpoints and does not animate invented
+meters or analysis states.
 
 Implemented interactions include one permanent Tune knob, direct Focus/Width editing
 in the Body Map, three full-width Body Response sliders, direct numeric entry, a
@@ -55,6 +84,22 @@ locally when the plug-in host supports Web Storage.
 The view uses native responsive layouts instead of shrinking a fixed chassis. The
 1280×760 host is the full layout; 900 px and 766 px use compact rules that preserve
 physical text, fader, and hit-target sizes.
+
+## Verification
+
+With the official `cmaj` executable on `PATH`, the complete local verification is:
+
+```sh
+npm run test:contract
+npm run test:fixtures
+cmaj test tests
+npm run test:audio
+npm run preview:matrix
+```
+
+The audio suite checks a neutral-path residual tolerance and verifies that a
++1200-cent event moves the dominant 196 Hz fixture body toward 392 Hz. Generated
+input/event fixtures and Golden Files are committed together with the DSP revision.
 
 ## Current UI states
 

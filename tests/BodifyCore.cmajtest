@@ -1,0 +1,87 @@
+// BODIFY M1 math and stability tests.
+// Run with: cmaj test tests/BodifyCore.cmajtest
+
+## global ("../BodifyDSP.cmajor")
+
+## testFunction()
+
+bool near (float a, float b, float tolerance)
+{
+    return abs (a - b) <= tolerance;
+}
+
+bool pitchRatioIdentity()
+{
+    return near (BodifyCore::pitchRatio (0.0f), 1.0f, 1.0e-6f);
+}
+
+bool pitchRatioOctaves()
+{
+    return near (BodifyCore::pitchRatio (1200.0f), 2.0f, 1.0e-5f)
+        && near (BodifyCore::pitchRatio (-1200.0f), 0.5f, 1.0e-5f);
+}
+
+bool snapFindsNearestSemitone()
+{
+    let targetA = BodifyCore::snappedTarget (440.0f, 37.0f);
+    let targetB = BodifyCore::snappedTarget (440.0f, 63.0f);
+    return near (targetA, 440.0f, 0.01f)
+        && near (targetB, 466.1638f, 0.02f);
+}
+
+bool decibelConversion()
+{
+    return near (BodifyCore::dbToGain (0.0f), 1.0f, 1.0e-6f)
+        && near (BodifyCore::dbToGain (6.0f), 1.9953f, 0.001f)
+        && near (BodifyCore::dbToGain (-6.0f), 0.5012f, 0.001f);
+}
+
+bool smootherCoefficientIsBounded()
+{
+    let fast = BodifyCore::timeCoeff (1.0f, 48000.0f);
+    let slow = BodifyCore::timeCoeff (100.0f, 48000.0f);
+    return fast > 0.0f && fast < 1.0f
+        && slow > fast && slow < 1.0f;
+}
+
+bool followerRisesAndReleases()
+{
+    BodifyCore::Follower follower;
+    follower.env = 0.0f;
+    let attack = BodifyCore::timeCoeff (1.0f, 48000.0f);
+    let release = BodifyCore::timeCoeff (50.0f, 48000.0f);
+
+    for (int i = 0; i < 1000; i += 1)
+        BodifyCore::follow (follower, 1.0f, attack, release);
+
+    let peak = follower.env;
+    for (int i = 0; i < 5000; i += 1)
+        BodifyCore::follow (follower, 0.0f, attack, release);
+
+    return peak > 0.95f && follower.env < peak && follower.env >= 0.0f;
+}
+
+bool svfStaysBoundedAtSupportedExtremes()
+{
+    BodifyCore::SVF filter;
+    filter.ic1 = 0.0f;
+    filter.ic2 = 0.0f;
+
+    for (int i = 0; i < 20000; i += 1)
+    {
+        let x = (i % 97) == 0 ? 1.0f : 0.0f;
+        let cutoff = (i % 2) == 0 ? 35.0f : 4000.0f;
+        let q = (i % 3) == 0 ? 0.5f : 6.0f;
+        let result = BodifyCore::processSVF (filter, x, cutoff, q, 44100.0f);
+        if (abs (result.lp) > 8.0f || abs (result.bp) > 8.0f || abs (result.hp) > 8.0f)
+            return false;
+    }
+    return true;
+}
+
+bool safetyClampBoundsAudio()
+{
+    return BodifyCore::clampFiniteAudio (20.0f) == 8.0f
+        && BodifyCore::clampFiniteAudio (-20.0f) == -8.0f
+        && BodifyCore::clampFiniteAudio (0.25f) == 0.25f;
+}

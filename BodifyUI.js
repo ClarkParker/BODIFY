@@ -151,7 +151,7 @@ const PARAM_TOOLTIPS = {
     title: "Body Solo",
     description: "Auditions only the selected body range so the detected resonance can be verified by ear.",
     range: "Off · On · Default: Off",
-    usage: "Hold Solo for momentary audition · Use Latch to keep it active.",
+    usage: "Hold Body Solo for momentary audition · Click PIN to keep it active.",
   },
   param19: {
     title: "Body Level",
@@ -387,6 +387,10 @@ class BodifyUI extends HTMLElement {
     this._sent = [];
     this._activeDrawer = null;
     this._soloLatched = false;
+    this._endpointListeners = [];
+    this._analysisState = 0;
+    this._detectedConfidence = 0;
+    this._outputPeakHold = -70;
     this._learnTimer = 0;
     this._peakIndex = 1;
     this._tooltipsEnabled = this._readTooltipPreference(true);
@@ -429,6 +433,7 @@ class BodifyUI extends HTMLElement {
     this._wireTooltipToggle();
     this._wireBridge();
     this._setSynthesisAvailability(this._previewMode);
+    this._setM1FeatureAvailability(this._previewMode);
 
     this._resizeCanvas = () => {
       const rect = this._canvas.getBoundingClientRect();
@@ -469,6 +474,8 @@ class BodifyUI extends HTMLElement {
     this._soloLatched = false;
     this._activeDrawer = null;
     if (this._pcListener && this.pc?.removeAllParameterListener) this.pc.removeAllParameterListener(this._pcListener);
+    this._endpointListeners.forEach(({ id, listener }) => this.pc?.removeEndpointListener?.(id, listener));
+    this._endpointListeners = [];
     window.removeEventListener("resize", this._resizeFn);
     this._ro?.disconnect();
     if (this._raf) cancelAnimationFrame(this._raf);
@@ -501,6 +508,101 @@ class BodifyUI extends HTMLElement {
     };
     this.pc.addAllParameterListener?.(this._pcListener);
     PARAMS.forEach(parameter => this.pc.requestParameterValue?.(parameter.id));
+    this._listenEndpoint("inputMeterOut", value => this._paintInputMeter(value));
+    this._listenEndpoint("outputMeterOut", value => this._paintOutputMeter(value));
+    this._listenEndpoint("gateOut", value => this._paintGate(Number(value) >= 0.5));
+    this._listenEndpoint("confidenceOut", value => this._paintConfidence(Number(value)));
+    this._listenEndpoint("analysisStateOut", value => this._paintAnalysisState(Number(value)));
+    this._listenEndpoint("detectedHzOut", value => this._acceptDetectedFrequency(Number(value)));
+  }
+
+  _listenEndpoint(id, paint) {
+    if (!this.pc?.addEndpointListener) return;
+    const listener = rawValue => paint(rawValue?.value ?? rawValue);
+    this.pc.addEndpointListener(id, listener);
+    this._endpointListeners.push({ id, listener });
+  }
+
+  _stereoEndpointValue(rawValue) {
+    if (Array.isArray(rawValue)) return [Number(rawValue[0]) || 0, Number(rawValue[1]) || 0];
+    if (rawValue && typeof rawValue === "object") {
+      const left = Number(rawValue[0] ?? rawValue.left ?? rawValue.x ?? 0) || 0;
+      const right = Number(rawValue[1] ?? rawValue.right ?? rawValue.y ?? left) || 0;
+      return [left, right];
+    }
+    const mono = Number(rawValue) || 0;
+    return [mono, mono];
+  }
+
+  _linearToDb(value) {
+    return clamp(20 * Math.log10(Math.max(0.000001, Math.abs(Number(value) || 0))), -70, 12);
+  }
+
+  _paintMeter(selector, rawValue) {
+    const values = this._stereoEndpointValue(rawValue);
+    this.querySelectorAll(`${selector} .meter-fill`).forEach((fill, index) => {
+      const db = this._linearToDb(values[index] ?? values[0]);
+      fill.style.height = `${clamp((db + 70) / 70, 0, 1) * 100}%`;
+    });
+    return values;
+  }
+
+  _paintInputMeter(rawValue) {
+    const values = this._paintMeter(".input-meter", rawValue);
+    const db = this._linearToDb(Math.max(...values));
+    this.querySelectorAll(".input-value").forEach(element => element.textContent = `${db.toFixed(1).replace("-", "−")} dBFS`);
+  }
+
+  _paintOutputMeter(rawValue) {
+    const values = this._paintMeter(".output-meter", rawValue);
+    const db = this._linearToDb(Math.max(...values));
+    this._outputPeakHold = Math.max(this._outputPeakHold, db);
+    this.querySelectorAll(".output-peak").forEach(element => element.textContent = `${this._outputPeakHold.toFixed(1).replace("-", "−")} dBFS`);
+  }
+
+  _paintGate(open) {
+    const state = this.querySelector(".gate-state");
+    state?.classList.toggle("open", open);
+    const label = state?.querySelector("span");
+    if (label) label.textContent = open ? "HIT ACTIVE" : "BELOW THRESHOLD";
+  }
+
+  _paintConfidence(value) {
+    this._detectedConfidence = clamp(Number(value) || 0, 0, 1);
+    const chip = this.querySelector(".peak-chip.selected span");
+    if (chip && !this._previewMode) chip.textContent = `${Math.round(this._detectedConfidence * 100)}%`;
+  }
+
+  _paintAnalysisState(rawState) {
+    const state = clamp(Math.round(rawState), 0, 3);
+    this._analysisState = state;
+    const labels = ["ANALYSIS OFFLINE", "LISTENING", "NO LOCK", "BODY LOCKED"];
+    const shortLabels = ["OFFLINE", "LISTENING", "NO LOCK", "LOCKED"];
+    const analysis = this.querySelector(".analysis-state");
+    if (analysis) analysis.innerHTML = `<i></i>${labels[state]}`;
+    const status = this.querySelector(".detect-status");
+    if (status) {
+      status.textContent = shortLabels[state];
+      status.classList.toggle("working", state === 1);
+    }
+    const button = this.querySelector(".learn-button");
+    if (button && !this._previewMode) {
+      button.disabled = state === 1;
+      button.querySelector("b").textContent = state === 1
+        ? "LISTENING FOR NEXT HIT…"
+        : state === 3 ? "REFINE ON NEXT CLEAN HIT" : "LEARN FROM NEXT CLEAN HIT";
+    }
+  }
+
+  _acceptDetectedFrequency(value) {
+    if (!Number.isFinite(value) || value < PARAM.get("param4").min || value > PARAM.get("param4").max) return;
+    if (!this._previewMode && Math.abs(value - this._values.param4) > 0.5) this._setParam("param4", value, true);
+    if (!this._previewMode) {
+      const chip = this.querySelector(".peak-chip.selected");
+      const info = noteInfo(value);
+      const label = chip?.querySelector("strong");
+      if (label) label.textContent = `${formatFrequency(value)} · ${info.name}`;
+    }
   }
 
   _send(id, value) {
@@ -1198,6 +1300,7 @@ class BodifyUI extends HTMLElement {
     const button = this.querySelector(".clip-reset");
     if (!button) return;
     button.addEventListener("click", () => {
+      this._outputPeakHold = -70;
       this._clipResetUntil = performance.now() + 900;
       button.classList.add("cleared");
       button.querySelector(".output-peak").textContent = "CLEARED";
@@ -1259,6 +1362,35 @@ class BodifyUI extends HTMLElement {
     });
     const summary = drawer.querySelector(".synth-summary");
     if (!available && summary) summary.textContent = "BODY LAYER · PLANNED";
+  }
+
+  _setM1FeatureAvailability(preview) {
+    if (preview) return;
+
+    const detectorNote = this.querySelector(".detector-overview p");
+    if (detectorNote) detectorNote.textContent = "M1 locks the selected body from the next clean hit. Multi-peak proposals and contour controls follow in M2.";
+
+    this.querySelectorAll(".peak-chip:not(.selected)").forEach(chip => {
+      chip.hidden = true;
+      chip.disabled = true;
+    });
+    const peakLabel = this.querySelector(".peak-area > label");
+    if (peakLabel) peakLabel.textContent = "DETECTED BODY";
+
+    const advanced = this.querySelector(".advanced-grid");
+    advanced?.setAttribute("aria-label", "Planned M2 detector controls");
+    advanced?.querySelectorAll("button, [role='slider'], [role='textbox']").forEach(control => {
+      control.setAttribute("aria-disabled", "true");
+      if ("disabled" in control) control.disabled = true;
+      if (control.hasAttribute("tabindex")) control.tabIndex = -1;
+    });
+
+    const dual = this.querySelector('.segmented[data-endpoint-id="param17"] button[data-value="1"]');
+    if (dual) {
+      dual.disabled = true;
+      dual.setAttribute("aria-disabled", "true");
+      dual.title = "Dual-channel analysis is planned for M2";
+    }
   }
 
   _wireDrawers() {
@@ -1836,6 +1968,12 @@ class BodifyUI extends HTMLElement {
     border-color:rgba(200,166,99,.28);
     background:rgba(74,55,22,.2);
   }
+  bodify-ui .advanced-grid[aria-label="Planned M2 detector controls"] {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui button[aria-disabled="true"] { cursor:not-allowed; }
   bodify-ui .compare {
     height:40.28px;
     border-color:rgba(150,179,187,.2);
@@ -2569,14 +2707,14 @@ class BodifyUI extends HTMLElement {
       inset 0 1px rgba(255,255,255,.075),
       0 16px 34px rgba(0,0,0,.62),
       0 0 0 1px rgba(0,0,0,.4);
-    transform:translateY(4px) scale(.985);
+    transform:translateY(4px);
     transform-origin:center top;
     transition:opacity .09s ease,transform .09s ease,visibility 0s linear .09s;
   }
   bodify-ui .parameter-tooltip[data-open="true"] {
     visibility:visible;
     opacity:1;
-    transform:translateY(0) scale(1);
+    transform:translateY(0);
     transition-delay:0s;
   }
   bodify-ui .chassis[data-tooltips="off"] .parameter-tooltip {

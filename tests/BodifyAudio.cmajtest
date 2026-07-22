@@ -1,0 +1,12 @@
+// BODIFY M1 deterministic audio regression tests.
+// Generate fixtures first: node tests/generate_audio_fixtures.mjs
+// Run with: cmaj test tests/BodifyAudio.cmajtest
+
+## runScript ({ frequency: 48000, blockSize: 64, samplesToRender: 48000, subDir: "audio/identity", patch: "../Bodify.cmajorpatch", maxDiffDb: -90 })
+
+// Neutral M1 settings must remain a transparent audio path.
+
+## runScript ({ frequency: 48000, blockSize: 64, samplesToRender: 48000, subDir: "audio/octave-up", patch: "../Bodify.cmajorpatch", maxDiffDb: -80 })
+
+// A +1200 cent event exercises the complete gate, body extraction,
+// modal resynthesis, smoothing, Auto Gain, and telemetry path.
