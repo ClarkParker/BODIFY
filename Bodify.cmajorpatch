@@ -1,0 +1,17 @@
+{
+  "CmajorVersion": 1,
+  "ID": "com.clarkparker.bodify",
+  "version": "0.1.0",
+  "name": "BODIFY",
+  "description": "Phase-coherent drum body retuning and source-following resynthesis.",
+  "category": "effect",
+  "manufacturer": "Clark Parker",
+  "isInstrument": false,
+  "source": "BodifyDSP.cmajor",
+  "view": {
+    "src": "BodifyUI.js",
+    "width": 1280,
+    "height": 760,
+    "resizable": true
+  }
+}

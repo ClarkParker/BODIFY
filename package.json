@@ -1,0 +1,16 @@
+{
+  "name": "bodify-ui-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "preview:build": "node tools/build_preview.mjs",
+    "preview:render": "node tools/build_preview.mjs && node tools/render_preview.mjs",
+    "preview:matrix": "node tools/build_preview.mjs && node tools/render_matrix.mjs",
+    "preview:release": "node tools/release_preview.mjs"
+  },
+  "devDependencies": {
+    "@sparticuz/chromium": "149.0.0",
+    "playwright-core": "1.61.1",
+    "tar-fs": "3.1.3"
+  }
+}

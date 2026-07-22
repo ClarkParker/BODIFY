@@ -1,0 +1,54 @@
+{
+  "buildID": "a64c422d45b2",
+  "createdAt": "2026-07-22T19:46:26.737Z",
+  "verification": {
+    "result": "passed",
+    "viewports": [
+      "1280x760",
+      "766x455"
+    ],
+    "checks": [
+      "interactive controls",
+      "33 unique parameter endpoints",
+      "drawer geometry and overflow",
+      "responsive control sizes",
+      "33 parameter tooltips with hover, keyboard focus, and accessible descriptions",
+      "tooltip collision bounds at full and compact sizes",
+      "JavaScript-paused first frame",
+      "runtime errors"
+    ]
+  },
+  "inputs": {
+    "BodifyUI.js": "b541883abaed1d5dd0f3b72c10156a080ed284fb1391a0f20c2e4c7e858f1ab7",
+    "BodifyDSP.cmajor": "bc1bb60f95b7adaed58ed4e3208727841a819919ec0c8bc3f4a362df4128f7a5",
+    "Bodify.cmajorpatch": "4be565a16b1d81dab2939739e47583b28b455d79c84f7be494f11a30216fec43",
+    "docs/UX_SPEC.md": "4896b97330f1208363b2d5a2288bf29af8c55087c9a72fa9b76970c6ef64e020",
+    "tools/build_preview.mjs": "e2f3b96f98d46c8e9573e7afebcbd6695d61b712e2841db56191b7dca574867c",
+    "tools/render_preview.mjs": "2d9c7150ba6a56e487fdcf6488d197c362e1222f7b025fc08f91a9b177984edc",
+    "tools/release_preview.mjs": "b4b6a2d091077d17f452830a030771998780907fb5ba74a8c66e05c856a650ad"
+  },
+  "artifacts": {
+    "bodify-preview-a64c422d45b2.html": {
+      "bytes": 228032,
+      "sha256": "5d013639dbe670c889566fc62ce0e0a0433c613ea8a167cb09519f9faa54a952"
+    },
+    "bodify-main-1280x760-a64c422d45b2.png": {
+      "bytes": 384123,
+      "sha256": "40ba7ce28bf405c0f62bd47ffb948abad0c55bcf019a5e869c506d52fd4d62ae",
+      "width": 1280,
+      "height": 760
+    },
+    "bodify-main-766x455-a64c422d45b2.png": {
+      "bytes": 201679,
+      "sha256": "4a89f68f3af098314490736da1c0149ddf7a9f4c405b7eec25327f5ebefa1ba0",
+      "width": 766,
+      "height": 455
+    },
+    "bodify-tooltip-speed-766x455-a64c422d45b2.png": {
+      "bytes": 202841,
+      "sha256": "8236ddfadffb40d9514ce3fb7ab2b7d51609d58da72b1503f1640f22ba9e04ea",
+      "width": 766,
+      "height": 455
+    }
+  }
+}

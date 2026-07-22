@@ -1,0 +1,46 @@
+{
+  "buildID": "c023cdb246ef",
+  "createdAt": "2026-07-22T19:19:06.756Z",
+  "verification": {
+    "result": "passed",
+    "viewports": [
+      "1280x760",
+      "766x455"
+    ],
+    "checks": [
+      "interactive controls",
+      "33 unique parameter endpoints",
+      "drawer geometry and overflow",
+      "responsive control sizes",
+      "JavaScript-paused first frame",
+      "runtime errors"
+    ]
+  },
+  "inputs": {
+    "BodifyUI.js": "74e58db008dc75224af682b93c6c8bb5b42356015e10f294d43ae92e34fb88a6",
+    "BodifyDSP.cmajor": "bc1bb60f95b7adaed58ed4e3208727841a819919ec0c8bc3f4a362df4128f7a5",
+    "Bodify.cmajorpatch": "4be565a16b1d81dab2939739e47583b28b455d79c84f7be494f11a30216fec43",
+    "docs/UX_SPEC.md": "4f43f18ffcf73e6885a004fbcf7c6ebb795fd2bac60edc82bc3c9d66991186fb",
+    "tools/build_preview.mjs": "e2f3b96f98d46c8e9573e7afebcbd6695d61b712e2841db56191b7dca574867c",
+    "tools/render_preview.mjs": "d061350969ca399e0e5695d87552a06703cffe389bfcf8b5f0fb6854626eaa56",
+    "tools/release_preview.mjs": "40c26254dcda766e93b7fef4eb9038792d66e49a253fc9a8c2cb0923513d5593"
+  },
+  "artifacts": {
+    "bodify-preview-c023cdb246ef.html": {
+      "bytes": 184005,
+      "sha256": "2b6853a85e48b14852bab312c9fbd29d5afb525f4f3916a1c8a6a8d2120b721d"
+    },
+    "bodify-main-1280x760-c023cdb246ef.png": {
+      "bytes": 384368,
+      "sha256": "99cb7f317cce2c36368865b89997740732bf49624e857bbbd11bdfd487296a58",
+      "width": 1280,
+      "height": 760
+    },
+    "bodify-main-766x455-c023cdb246ef.png": {
+      "bytes": 200953,
+      "sha256": "a1bcbb76d782f3ecbdaef58fa61118c69d339035c29a4d2b8b0db7092c58f64e",
+      "width": 766,
+      "height": 455
+    }
+  }
+}

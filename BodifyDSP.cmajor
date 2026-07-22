@@ -1,0 +1,90 @@
+/*
+    BODIFY UI prototype DSP.
+
+    This processor is intentionally audio-transparent. Its only purpose is to expose
+    the provisional V1 parameter contract while the product workflow and GUI are
+    evaluated. No retuning or resynthesis algorithm is implemented here.
+*/
+
+processor BodifyDSP [[ main ]]
+{
+    input  stream float<2> in;
+    output stream float<2> out;
+
+    input event float param1  [[ name: "Bypass",           min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
+    input event float param2  [[ name: "Synth Routing",    min: 0.0,     max: 2.0,    init: 0.0,    step: 1.0, text: "Off|Layer|Replace" ]];
+    input event float param3  [[ name: "Tune",             min: -1200.0, max: 1200.0, init: 0.0,    unit: "ct" ]];
+    input event float param4  [[ name: "Focus",            min: 35.0,    max: 4000.0, init: 196.0,  unit: "Hz" ]];
+    input event float param5  [[ name: "Width",            min: 0.17,    max: 2.0,    init: 0.75,   unit: "oct" ]];
+    input event float param6  [[ name: "Threshold",        min: -70.0,   max: 0.0,    init: -48.0,  unit: "dBFS" ]];
+    input event float param7  [[ name: "Speed",            min: 15.0,    max: 50.0,   init: 20.0,   unit: "ms" ]];
+    input event float param8  [[ name: "Body Decay",       min: -100.0,  max: 100.0,  init: 0.0,    unit: "%" ]];
+    input event float param9  [[ name: "Replace Amount",   min: 0.0,     max: 1.0,    init: 0.5 ]];
+    input event float param10 [[ name: "Shift Trim",       min: -6.0,    max: 6.0,    init: 0.0,    unit: "dB" ]];
+    input event float param11 [[ name: "Auto Gain",        min: 0.0,     max: 1.0,    init: 1.0,    step: 1.0 ]];
+    input event float param12 [[ name: "Output",           min: -24.0,   max: 12.0,   init: 0.0,    unit: "dB" ]];
+    input event float param13 [[ name: "Contour",          min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0, text: "Relative|Lock" ]];
+    input event float param14 [[ name: "Contour Strength", min: 0.0,     max: 1.0,    init: 0.35 ]];
+    input event float param15 [[ name: "Resonances",       min: 1.0,     max: 4.0,    init: 2.0,    step: 1.0 ]];
+    input event float param16 [[ name: "Snap",             min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
+    input event float param17 [[ name: "Stereo",           min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0, text: "Linked|Dual" ]];
+    input event float param18 [[ name: "Focus Solo",       min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0, text: "Off|On" ]];
+    input event float param19 [[ name: "Synth Body",       min: 0.0,     max: 1.0,    init: 0.55 ]];
+    input event float param20 [[ name: "Body Character",   min: 0.0,     max: 1.0,    init: 0.35 ]];
+    input event float param21 [[ name: "Sub",              min: 0.0,     max: 1.0,    init: 0.15 ]];
+    input event float param22 [[ name: "Noise",            min: 0.0,     max: 1.0,    init: 0.25 ]];
+    input event float param23 [[ name: "Noise Color",      min: 0.0,     max: 1.0,    init: 0.55 ]];
+    input event float param24 [[ name: "Noise Decay",      min: 20.0,    max: 600.0,  init: 120.0,  unit: "ms" ]];
+    input event float param25 [[ name: "Exciter",          min: 0.0,     max: 1.0,    init: 0.12 ]];
+    input event float param26 [[ name: "Exciter Tone",     min: 500.0,   max: 8000.0, init: 2800.0, unit: "Hz" ]];
+    input event float param27 [[ name: "Synth Length",     min: 0.25,    max: 2.0,    init: 1.0 ]];
+    input event float param28 [[ name: "Follow",           min: 0.0,     max: 1.0,    init: 0.8 ]];
+    input event float param29 [[ name: "Drive",            min: 0.0,     max: 1.0,    init: 0.1 ]];
+    input event float param30 [[ name: "Layer Level",      min: -60.0,   max: 12.0,   init: -9.0,   unit: "dB" ]];
+    input event float param31 [[ name: "Body Enable",      min: 0.0,     max: 1.0,    init: 1.0,    step: 1.0 ]];
+    input event float param32 [[ name: "Noise Enable",     min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
+    input event float param33 [[ name: "Exciter Enable",   min: 0.0,     max: 1.0,    init: 0.0,    step: 1.0 ]];
+
+    event param1  (float v) {}
+    event param2  (float v) {}
+    event param3  (float v) {}
+    event param4  (float v) {}
+    event param5  (float v) {}
+    event param6  (float v) {}
+    event param7  (float v) {}
+    event param8  (float v) {}
+    event param9  (float v) {}
+    event param10 (float v) {}
+    event param11 (float v) {}
+    event param12 (float v) {}
+    event param13 (float v) {}
+    event param14 (float v) {}
+    event param15 (float v) {}
+    event param16 (float v) {}
+    event param17 (float v) {}
+    event param18 (float v) {}
+    event param19 (float v) {}
+    event param20 (float v) {}
+    event param21 (float v) {}
+    event param22 (float v) {}
+    event param23 (float v) {}
+    event param24 (float v) {}
+    event param25 (float v) {}
+    event param26 (float v) {}
+    event param27 (float v) {}
+    event param28 (float v) {}
+    event param29 (float v) {}
+    event param30 (float v) {}
+    event param31 (float v) {}
+    event param32 (float v) {}
+    event param33 (float v) {}
+
+    void main()
+    {
+        loop
+        {
+            out <- in;
+            advance();
+        }
+    }
+}
