@@ -7,6 +7,7 @@
            Body Solo, Snap, Auto Gain, output gain, and telemetry.
     0.2.1  UI-only help and window-fit maintenance; DSP is unchanged.
     0.2.2  Compact delayed tooltips with adjustment suppression; DSP is unchanged.
+    0.2.3  One-second initial tooltip hover delay; DSP is unchanged.
 
     The optional Body/Noise/Exciter layer parameters remain reserved until M3.
     Their endpoint numbers and meanings are intentionally preserved.

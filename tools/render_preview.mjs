@@ -247,11 +247,11 @@ try {
 
     const initialStart = Date.now();
     await speed.hover();
-    await page.waitForTimeout(420);
+    await page.waitForTimeout(700);
     if (await tooltipIsOpen()) throw new Error("Initial pointer tooltip opened before the professional hover delay");
     await readOpenTooltip("param7");
     const initialElapsed = Date.now() - initialStart;
-    if (initialElapsed < 580 || initialElapsed > 1500)
+    if (initialElapsed < 900 || initialElapsed > 1800)
       throw new Error(`Initial pointer tooltip delay is outside the expected range: ${initialElapsed} ms`);
 
     const switchStart = Date.now();
@@ -367,12 +367,12 @@ try {
       throw new Error("Escape changed the global tooltip preference");
     await page.waitForFunction(() => document.querySelector(".parameter-tooltip")?.dataset.open === "false");
 
-    // A pending 650 ms first hover must not fire after the user disables help.
+    // A pending 1000 ms first hover must not fire after the user disables help.
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.mouse.move(viewportWidth / 2, 2);
     await speed.hover();
     await toggle.evaluate(button => button.click());
-    await page.waitForTimeout(760);
+    await page.waitForTimeout(1110);
     if (await tooltipIsOpen()) throw new Error("A pending tooltip timer survived the OFF action");
 
     const stored = await page.evaluate(() => {

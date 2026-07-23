@@ -138,7 +138,7 @@ without an explicit signal-flow definition.
 - All tooltip copy is English. The visible bubble stays concise: title, purpose, and
   range/default summary. The complete editing gesture remains in the persistent
   keyboard-linked accessible description.
-- The first pointer tooltip appears after 650 ms. Moving directly between controls
+- The first pointer tooltip appears after 1000 ms. Moving directly between controls
   uses a 130 ms handoff, while keyboard-focus help remains immediate. Escape dismisses
   the current tooltip without changing the parameter.
 - The visible bubble is at most 240 px wide with a 94% opaque blurred surface. It is
@@ -156,7 +156,7 @@ without an explicit signal-flow definition.
 - Focus, Width, direct numeric readouts, segmented choices, power controls, and the
   three synthesis channel levels follow the same help behavior as standard sliders.
 
-## Version 0.2.2 boundaries
+## Version 0.2.3 boundaries
 
 - The standalone browser preview simulates spectrum, meters, confidence, and pitch
   because no Cmajor audio engine exists in that page. The Amorph view receives real

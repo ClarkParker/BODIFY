@@ -98,7 +98,7 @@ const manifest = {
       "drawer geometry and overflow",
       "responsive control sizes",
       "33 parameter tooltips plus contextual help for every visible button",
-      "650 ms initial hover, 130 ms tooltip handoff, and immediate keyboard help",
+      "1000 ms initial hover, 130 ms tooltip handoff, and immediate keyboard help",
       "compact 240 px visual summaries with full accessible interaction instructions",
       "tooltip suppression during pointer adjustment",
       "tooltip collision bounds at full and compact sizes",

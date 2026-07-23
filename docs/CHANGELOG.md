@@ -1,5 +1,14 @@
 # BODIFY Changelog
 
+## 0.2.3 — Calmer tooltip onset
+
+- Increased the first pointer-hover delay from 650 ms to 1000 ms so contextual help
+  appears only after a deliberate pause over a control.
+- Kept the 130 ms handoff between nearby controls, immediate keyboard-focus help,
+  English copy, compact layout, adjustment suppression, and accessibility behavior
+  unchanged.
+- Updated timing regressions and immutable preview metadata for the new delay.
+
 ## 0.2.2 — Professional tooltip pacing
 
 - Kept all parameter and action help in English while reducing the visible bubble to

@@ -1,0 +1,74 @@
+{
+  "buildID": "b315dc8b4b55",
+  "createdAt": "2026-07-23T06:02:18.014Z",
+  "verification": {
+    "result": "passed",
+    "viewports": [
+      "1280x760",
+      "900x534",
+      "766x455"
+    ],
+    "checks": [
+      "interactive controls",
+      "33 unique parameter endpoints",
+      "drawer geometry and overflow",
+      "responsive control sizes",
+      "33 parameter tooltips plus contextual help for every visible button",
+      "1000 ms initial hover, 130 ms tooltip handoff, and immediate keyboard help",
+      "compact 240 px visual summaries with full accessible interaction instructions",
+      "tooltip suppression during pointer adjustment",
+      "tooltip collision bounds at full and compact sizes",
+      "global tooltip visibility toggle via pointer and keyboard",
+      "open and pending tooltip cancellation when switched off",
+      "accessible parameter help retained while visual tooltips are off",
+      "tooltip preference retained across view reconnect",
+      "JavaScript-paused first frame",
+      "runtime errors"
+    ]
+  },
+  "inputs": {
+    "BodifyUI.js": "9c1ea599ef365fdea923260a8d86555bf019a2db288824c174ce1bbce0b0583c",
+    "BodifyDSP.cmajor": "693e16c4fb9af2caaf5497fb2ac6489c54a0992d28eb253706e23f75b8d1d07f",
+    "Bodify.cmajorpatch": "4592321de6e712cad41bd2dbb84d22dd96ddfa23635b7350a613a5953ccdfae3",
+    "docs/UX_SPEC.md": "2a853e4c4f6d95e841fe54f8c86bbfea470e5246b68e4237083258f0dd164672",
+    "tools/build_preview.mjs": "e2f3b96f98d46c8e9573e7afebcbd6695d61b712e2841db56191b7dca574867c",
+    "tools/render_preview.mjs": "216d277c4c4ab2035d9ac1fd7a872731a80cb27d2630c59e4d0e64dc18928c99",
+    "tools/release_preview.mjs": "36160f580ae83403cf26c8eb95638d656aa316cdf1d216bb665c2af2364866bd"
+  },
+  "artifacts": {
+    "bodify-preview-b315dc8b4b55.html": {
+      "bytes": 255723,
+      "sha256": "6fa2584e8fed000ae816867906d4f5a6a80dfafa9d037d54404e258c84ec8eb2"
+    },
+    "bodify-main-1280x760-b315dc8b4b55.png": {
+      "bytes": 387984,
+      "sha256": "49a5a20305a40fb04c5b6e12145ce285ed7d31b28de6a8d47f61f7682d82f47a",
+      "width": 1280,
+      "height": 760
+    },
+    "bodify-main-900x534-b315dc8b4b55.png": {
+      "bytes": 239963,
+      "sha256": "bbbfdf8c5b4121cdbfa55904096cb6f8267b45c0a29523f6567c7d1a8dd40910",
+      "width": 900,
+      "height": 534
+    },
+    "bodify-main-766x455-b315dc8b4b55.png": {
+      "bytes": 204858,
+      "sha256": "28f343fdef9d7759539659889a65fd7c141f58e036a9619e03d6dff3fd345615",
+      "width": 766,
+      "height": 455
+    },
+    "bodify-tooltip-speed-766x455-b315dc8b4b55.png": {
+      "bytes": 205715,
+      "sha256": "91d1fbf42203cde5298af4f53f43e24b8ef3b9a44d47934908facd0bb18e405c",
+      "width": 766,
+      "height": 455
+    },
+    "bodify-tooltips-off-766x455-b315dc8b4b55.png": {
+      "bytes": 203700,
+      "sha256": "99ea1fb653a5a58bbfc907a1c471ac45e5a4567bf1814d60d4d3cfe8060ee19b",
+      "width": 766,
+      "height": 455
+    }
+  }
+}

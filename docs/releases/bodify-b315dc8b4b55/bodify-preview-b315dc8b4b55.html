@@ -1,3 +1,1551 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="bodify-build-id" content="b315dc8b4b55">
+  <meta name="bodify-ui-sha256" content="9c1ea599ef365fdea923260a8d86555bf019a2db288824c174ce1bbce0b0583c">
+  <title>BODIFY UI Prototype — b315dc8b4b55</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #070a0e; }
+    body { display: grid; place-items: center; }
+    #preview-view { display: flex; width: 100vw; height: 100vh; align-items: center; justify-content: center; overflow: hidden; }
+    body:not(.preview-ready) #preview-view .chassis { width: 100vw; height: 100vh; }
+    #preview-build { position: fixed; z-index: 999; right: 5px; bottom: 3px; padding: 2px 4px; border-radius: 3px; background: rgba(0,0,0,.6); color: #708087; font: 7px/1.2 ui-monospace, monospace; letter-spacing: .04em; pointer-events: none; }
+    #preview-error { display: none; position: fixed; z-index: 1000; left: 18px; right: 18px; bottom: 18px; padding: 12px 15px; border: 1px solid #9d4e4e; border-radius: 5px; background: #251111; color: #ffd5d5; font: 12px/1.45 system-ui, sans-serif; }
+    body.preview-error #preview-error { display: block; }
+  </style>
+</head>
+<body data-bodify-build-id="b315dc8b4b55">
+  <bodify-ui id="preview-view" data-preview="true">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, html { overflow: hidden; margin: 0; }
+  :root { color-scheme: dark; }
+  body { background: #06090b; }
+  bodify-ui {
+    --accent: #69e0d2;
+    --source: #e8b455;
+    --target: #69aefd;
+    --warning: #ffca63;
+    --clip: #ff6b5f;
+    --panel: #11171a;
+    --raised: #172025;
+    --line: #2b373c;
+    --line-bright: #3a484e;
+    --text: #e6ecee;
+    --muted: #809096;
+    font-family: Inter, "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  bodify-ui button { font: inherit; }
+  bodify-ui .chassis {
+    width: 960px;
+    height: 570px;
+    position: relative;
+    overflow: clip;
+    border: 1px solid #36434a;
+    border-radius: 8px;
+    background: #080d10;
+    box-shadow: inset 0 1px rgba(255,255,255,.07), 0 22px 58px rgba(0,0,0,.58);
+  }
+
+  bodify-ui .topbar {
+    height: 60px;
+    padding: 0 12px 0 14px;
+    display: grid;
+    grid-template-columns: 220px 1fr 350px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    background: #0d1316;
+  }
+  bodify-ui .brand { display: flex; align-items: center; gap: 12px; }
+  bodify-ui .brand-mark { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid #4bdbca; border-radius: 7px; background: #102724; color: #79eee0; font-size: 20px; font-weight: 400; }
+  bodify-ui .brand-name { font-size: 18px; font-weight: 520; letter-spacing: 2.8px; }
+  bodify-ui .brand-sub { margin-top: 1px; color: #7f8e93; font-size: 8px; font-weight: 700; letter-spacing: 1.65px; }
+  bodify-ui .body-lock { justify-self: center; height: 40px; padding: 0 13px; display: flex; align-items: center; gap: 9px; border: 1px solid #2d3c41; border-radius: 20px; background: #0a1013; }
+  bodify-ui .body-lock i, bodify-ui .effect-led { width: 7px; height: 7px; flex: none; border-radius: 50%; background: var(--accent); box-shadow: 0 0 9px rgba(105,224,210,.65); }
+  bodify-ui .body-lock span { color: #829096; font-size: 9px; font-weight: 650; letter-spacing: 1px; }
+  bodify-ui .body-lock strong { font-size: 11px; font-weight: 550; letter-spacing: .35px; }
+  bodify-ui .top-actions { justify-self: end; display: flex; align-items: center; gap: 8px; }
+  bodify-ui .drawer-trigger, bodify-ui .tooltip-toggle, bodify-ui .compare button, bodify-ui .snap-button, bodify-ui .focus-solo, bodify-ui .solo-lock, bodify-ui .drawer-close, bodify-ui .learn-button, bodify-ui .clip-reset {
+    min-height: 44px;
+    border: 1px solid #344249;
+    border-radius: 5px;
+    background: #151d21;
+    color: #aab6ba;
+    box-shadow: inset 0 1px rgba(255,255,255,.04);
+    cursor: pointer;
+  }
+  bodify-ui .drawer-trigger { min-width: 76px; padding: 0 11px; font-size: 9px; font-weight: 650; letter-spacing: .8px; }
+  bodify-ui .drawer-trigger:hover, bodify-ui .drawer-trigger.selected { border-color: #47736e; color: #83e6da; background: #172825; }
+  bodify-ui .tooltip-toggle { min-width: 58px; padding: 0 8px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+  bodify-ui .help-glyph { width: 20px; height: 20px; display: grid; place-items: center; border: 1px solid #4b5b61; border-radius: 50%; color: #bac5c8; font-size: 11px; font-weight: 750; }
+  bodify-ui .tooltip-toggle-state { color: #77858a; font-size: 8px; font-weight: 750; letter-spacing: .45px; }
+  bodify-ui .tooltip-toggle[aria-pressed="true"] { border-color: #3e615e; background: #142321; }
+  bodify-ui .tooltip-toggle[aria-pressed="true"] .help-glyph { border-color: #4b8b84; color: #83e6da; box-shadow: 0 0 7px rgba(105,224,210,.16); }
+  bodify-ui .tooltip-toggle[aria-pressed="true"] .tooltip-toggle-state { color: #83e6da; }
+  bodify-ui .compare { height: 44px; display: flex; overflow: hidden; border: 1px solid #344249; border-radius: 5px; }
+  bodify-ui .compare button { width: 67px; min-height: 42px; border: 0; border-right: 1px solid #344249; border-radius: 0; color: #7f8c91; font-size: 8px; font-weight: 650; letter-spacing: .6px; }
+  bodify-ui .compare button:last-child { border-right: 0; }
+  bodify-ui .compare button.selected { color: #8af0e4; background: #15302d; box-shadow: inset 0 -3px var(--accent); }
+  bodify-ui .effect-led.off { background: #536066; box-shadow: none; }
+
+  bodify-ui .main {
+    height: 510px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 90px minmax(0,1fr) 110px;
+    gap: 10px;
+  }
+  bodify-ui .input-strip, bodify-ui .output-strip, bodify-ui .analyzer, bodify-ui .control-surface {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    background: var(--panel);
+    box-shadow: inset 0 1px rgba(255,255,255,.035), 0 4px 16px rgba(0,0,0,.22);
+  }
+  bodify-ui .rail-title { color: #bac5c8; font-size: 10px; font-weight: 650; letter-spacing: 1.3px; text-align: center; }
+  bodify-ui .rail-subtitle { color: #637279; font-size: 7px; font-weight: 650; letter-spacing: .8px; text-align: center; }
+
+  bodify-ui .input-strip { padding: 12px 9px 9px; display: grid; grid-template-rows: 18px 10px 1fr 25px 42px; gap: 6px; }
+  bodify-ui .input-meter { width: 62px; min-height: 0; position: relative; justify-self: center; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; padding: 6px; border: 1px solid #263238; border-radius: 6px; background: #070b0d; }
+  bodify-ui .detector-bar, bodify-ui .mini-meter { position: relative; overflow: hidden; border: 1px solid #11191c; border-radius: 2px; background: #05080a; box-shadow: inset 0 0 5px #000; }
+  bodify-ui .meter-fill { position: absolute; left: 2px; right: 2px; bottom: 2px; border-radius: 1px; background: linear-gradient(to top,#46d5bd 0 79%,#e7bc5e 80% 92%,#f36d62 93%); }
+  bodify-ui .threshold-line { position: absolute; z-index: 5; left: -8px; right: -8px; height: 44px; transform: translateY(50%); border: 0; background: transparent; color: var(--warning); cursor: ns-resize; touch-action: none; }
+  bodify-ui .threshold-line::before { content: ""; position: absolute; left: 0; right: 0; top: 21px; height: 2px; background: currentColor; box-shadow: 0 0 7px rgba(255,202,99,.38); }
+  bodify-ui .threshold-line::after { content: ""; position: absolute; left: -1px; top: 16px; width: 10px; height: 10px; border: 2px solid currentColor; border-radius: 50%; background: #12191c; }
+  bodify-ui .threshold-line b { position: absolute; z-index: 2; left: 50%; top: 0; min-width: 52px; padding: 2px 5px; transform: translateX(-50%); border-radius: 3px; background: #282111; color: #ffd37a; font-size: 8px; font-weight: 700; }
+  bodify-ui .input-value { align-self: center; color: #b8c4c7; font-size: 10px; font-variant-numeric: tabular-nums; text-align: center; }
+  bodify-ui .gate-state { display: grid; place-items: center; align-content: center; gap: 5px; border-top: 1px solid #263137; color: #7d8c91; font-size: 7px; font-weight: 650; letter-spacing: .8px; }
+  bodify-ui .gate-state i { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 7px rgba(105,224,210,.6); }
+
+  bodify-ui .work-area { min-width: 0; display: grid; grid-template-rows: 260px 220px; gap: 10px; }
+  bodify-ui .analyzer { --source-x: .363; --target-x: .301; position: relative; overflow: hidden; background: #091013; }
+  bodify-ui .analyzer-head { height: 48px; padding: 0 10px 0 13px; display: grid; grid-template-columns: 142px 1fr 82px; align-items: center; border-bottom: 1px solid #263338; background: #11191d; }
+  bodify-ui .section-title strong { display: block; font-size: 11px; font-weight: 650; letter-spacing: 1.3px; }
+  bodify-ui .section-title span { display: block; margin-top: 3px; color: #6f7e84; font-size: 8px; }
+  bodify-ui .pitch-path { justify-self: center; display: grid; grid-template-columns: 105px 34px 105px; align-items: center; }
+  bodify-ui .pitch-node { min-width: 0; display: grid; grid-template-columns: 1fr auto; gap: 1px 8px; align-items: center; }
+  bodify-ui .pitch-node label { grid-column: 1 / -1; font-size: 7px; font-weight: 750; letter-spacing: 1.1px; }
+  bodify-ui .pitch-node strong { font-size: 13px; font-weight: 550; font-variant-numeric: tabular-nums; }
+  bodify-ui .pitch-node span { color: #a9b4b7; font-size: 10px; }
+  bodify-ui .analyzer-source { color: var(--source); text-align: right; }
+  bodify-ui .analyzer-source strong { cursor: text; user-select: text; }
+  bodify-ui .analyzer-target { color: var(--target); text-align: left; }
+  bodify-ui .pitch-arrow { height: 1px; position: relative; margin: 0 8px; background: #45545a; }
+  bodify-ui .pitch-arrow::after { content: ""; position: absolute; right: -1px; top: -3px; border-left: 6px solid #65757b; border-top: 3px solid transparent; border-bottom: 3px solid transparent; }
+  bodify-ui .snap-button { justify-self: end; min-width: 76px; padding: 0 9px; color: #7f8c91; font-size: 8px; font-weight: 700; letter-spacing: .6px; }
+  bodify-ui .snap-button.on { color: #88bdff; border-color: #3c5f82; background: #122235; }
+  bodify-ui .spectrum-canvas { width: 100%; height: 210px; display: block; cursor: grab; touch-action: none; }
+  bodify-ui .band-audition { position: absolute; z-index: 4; top: 57px; left: calc(var(--source-x) * 100%); display: flex; gap: 4px; transform: translateX(-50%); }
+  bodify-ui .focus-solo { width: 128px; height: 44px; padding: 0 9px; display: flex; align-items: center; justify-content: space-between; border-color: #6f5932; background: #211c13; color: #f1c46f; }
+  bodify-ui .focus-solo span { display: flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; }
+  bodify-ui .focus-solo b { color: #b89a61; font-size: 7px; letter-spacing: .5px; }
+  bodify-ui .focus-solo.on, bodify-ui .solo-lock.on { border-color: #a07b38; background: #352710; color: #ffdc88; box-shadow: 0 0 14px rgba(232,180,85,.18); }
+  bodify-ui .solo-lock { width: 44px; height: 44px; padding: 0; color: #a99570; font-size: 7px; font-weight: 700; letter-spacing: .5px; }
+  bodify-ui .band-width-value { position: absolute; z-index: 4; left: calc(var(--source-x) * 100%); bottom: 12px; min-width: 72px; height: 27px; padding: 0 8px; display: grid; place-items: center; transform: translateX(-50%); border: 1px solid #6b552f; border-radius: 4px; background: #18140d; color: #efbd62; font-size: 9px; font-variant-numeric: tabular-nums; cursor: text; user-select: text; }
+  bodify-ui .target-tag { position: absolute; z-index: 3; left: calc(var(--target-x) * 100%); top: 105px; transform: translateX(-50%); color: var(--target); font-size: 7px; font-weight: 750; letter-spacing: .8px; text-shadow: 0 1px 3px #000; pointer-events: none; }
+
+  bodify-ui .control-surface { display: grid; grid-template-columns: 250px minmax(0,1fr); overflow: hidden; }
+  bodify-ui .tune-zone { position: relative; display: grid; place-items: center; border-right: 1px solid var(--line); background: #10171a; }
+  bodify-ui .tune-title { position: absolute; top: 10px; left: 14px; }
+  bodify-ui .tune-title strong { display: block; font-size: 11px; font-weight: 650; letter-spacing: 1.4px; }
+  bodify-ui .tune-title span { display: block; margin-top: 3px; color: #6d7c82; font-size: 8px; }
+  bodify-ui .tune-readout { position: absolute; z-index: 3; bottom: 8px; min-width: 116px; height: 30px; padding: 0 10px; display: grid; place-items: center; border: 1px solid #36696f; border-radius: 5px; background: #081316; color: #91dfff; font-size: 16px; font-weight: 520; letter-spacing: .6px; font-variant-numeric: tabular-nums; cursor: text; user-select: text; }
+  bodify-ui .shape-zone { min-width: 0; padding: 8px 18px; }
+  bodify-ui .zone-head { height: 24px; display: flex; align-items: flex-start; justify-content: space-between; }
+  bodify-ui .zone-head strong { font-size: 11px; font-weight: 650; letter-spacing: 1.25px; }
+  bodify-ui .zone-head span { color: #6f7e84; font-size: 8px; }
+  bodify-ui .shape-sliders { height: 180px; display: grid; grid-template-rows: repeat(3,1fr); gap: 0; }
+
+  bodify-ui .knob { --norm: .5; --angle: 0deg; --arc-start: 50; --arc-length: 0; --arc-offset: -50; --knob-accent: var(--target); position: relative; display: flex; flex-direction: column; align-items: center; }
+  bodify-ui .knob-label, bodify-ui .knob-value { display: none; }
+  bodify-ui .knob-dial { width: 142px; height: 142px; position: relative; border-radius: 50%; cursor: ns-resize; touch-action: none; filter: drop-shadow(0 6px 7px rgba(0,0,0,.56)); }
+  bodify-ui .knob-scale { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  bodify-ui .knob-scale path { fill: none; stroke-linecap: round; }
+  bodify-ui .knob-scale .scale-track { stroke: #303e44; stroke-width: 4.3; }
+  bodify-ui .knob-scale .scale-value { stroke: var(--knob-accent); stroke-width: 5.1; stroke-dasharray: var(--arc-length) 100; stroke-dashoffset: var(--arc-offset); filter: drop-shadow(0 0 2px color-mix(in srgb,var(--knob-accent) 60%,transparent)); }
+  bodify-ui .knob-scale .scale-ticks { stroke: #a8b5b8; stroke-linecap: round; }
+  bodify-ui .knob-scale .scale-ticks .minor { stroke-width: .68; opacity: .42; }
+  bodify-ui .knob-scale .scale-ticks .major { stroke-width: 1.15; opacity: .86; }
+  bodify-ui .knob-dial .cap { position: absolute; inset: 18px; border: 1px solid #49585e; border-radius: 50%; background: linear-gradient(145deg,#263136,#11181b 62%); box-shadow: inset 0 1px 1px rgba(255,255,255,.12), inset 0 -7px 18px rgba(0,0,0,.42), 0 0 0 4px #090e10, 0 5px 13px rgba(0,0,0,.58); transform: rotate(var(--angle)); }
+  bodify-ui .knob-dial .cap::after { content: ""; position: absolute; inset: 10px; border: 1px solid rgba(255,255,255,.035); border-radius: 50%; }
+  bodify-ui .knob-dial .cap b { position: absolute; z-index: 2; left: 50%; top: 6px; width: 3px; height: 30px; margin-left: -1.5px; border-radius: 2px; background: var(--knob-accent); box-shadow: 0 0 7px color-mix(in srgb,var(--knob-accent) 65%,transparent); }
+  bodify-ui .knob-landmarks { position: absolute; inset: 0; pointer-events: none; color: #78878c; font-size: 8px; font-weight: 650; font-variant-numeric: tabular-nums; }
+  bodify-ui .knob-landmarks span { position: absolute; }
+  bodify-ui .knob-landmarks span:first-child { left: 2px; bottom: 13px; }
+  bodify-ui .knob-landmarks span:nth-child(2) { left: 50%; top: 1px; transform: translateX(-50%); color: #c2cccf; }
+  bodify-ui .knob-landmarks span:last-child { right: 0; bottom: 13px; }
+
+  bodify-ui .parameter-slider { --norm: .5; --zero: 0; --fill-start: 0; --fill-size: .5; min-width: 0; }
+  bodify-ui .slider-head { height: 28px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  bodify-ui .slider-head label { color: #b8c3c6; font-size: 10px; font-weight: 650; letter-spacing: .9px; text-transform: uppercase; }
+  bodify-ui .slider-value { min-width: 76px; height: 28px; padding: 0 9px; display: grid; place-items: center; border: 1px solid #314148; border-radius: 4px; background: #081013; color: #7fe9dc; font-size: 11px; font-variant-numeric: tabular-nums; cursor: text; user-select: text; }
+  bodify-ui .slider-value.editing, bodify-ui .tune-readout.editing, bodify-ui .fader-value.editing, bodify-ui .band-width-value.editing, bodify-ui .source-frequency.editing { border-color: var(--accent); outline: 0; box-shadow: 0 0 0 2px rgba(105,224,210,.12); }
+  bodify-ui .slider-track { height: 44px; position: relative; cursor: ew-resize; touch-action: none; }
+  bodify-ui .slider-rail { position: absolute; left: 0; right: 0; top: 20px; height: 6px; border-radius: 4px; background: #2c393f; box-shadow: inset 0 1px 2px #050708; }
+  bodify-ui .slider-fill { position: absolute; left: calc(var(--fill-start) * 100%); top: 20px; width: calc(var(--fill-size) * 100%); height: 6px; border-radius: 4px; background: var(--accent); box-shadow: 0 0 6px rgba(105,224,210,.28); }
+  bodify-ui .slider-zero { display: none; position: absolute; left: calc(var(--zero) * 100%); top: 13px; width: 2px; height: 20px; background: #9caaae; transform: translateX(-1px); }
+  bodify-ui .parameter-slider.bipolar .slider-zero { display: block; }
+  bodify-ui .slider-thumb { position: absolute; left: calc(var(--norm) * 100%); top: 7px; width: 18px; height: 30px; margin-left: -9px; border: 1px solid #65757a; border-radius: 4px; background: linear-gradient(90deg,#273237,#4a595e 50%,#222c30); box-shadow: inset 0 1px rgba(255,255,255,.13), 0 3px 6px rgba(0,0,0,.58); }
+  bodify-ui .slider-thumb::after { content: ""; position: absolute; left: 4px; right: 4px; top: 14px; height: 2px; background: #d0fbf6; }
+  bodify-ui .slider-scale { height: 10px; margin-top: -6px; display: flex; justify-content: space-between; color: #5e6d73; font-size: 7px; font-weight: 650; letter-spacing: .6px; }
+  bodify-ui .shape-sliders .slider-head, bodify-ui .drawer .slider-head { height: 22px; }
+  bodify-ui .shape-sliders .slider-value, bodify-ui .drawer .slider-value { height: 22px; font-size: 9px; }
+  bodify-ui .shape-sliders .slider-track, bodify-ui .drawer .slider-track { height: 32px; }
+  bodify-ui .shape-sliders .slider-rail, bodify-ui .shape-sliders .slider-fill, bodify-ui .drawer .slider-rail, bodify-ui .drawer .slider-fill { top: 14px; }
+  bodify-ui .shape-sliders .slider-zero, bodify-ui .drawer .slider-zero { top: 7px; }
+  bodify-ui .shape-sliders .slider-thumb, bodify-ui .drawer .slider-thumb { top: 1px; }
+  bodify-ui .shape-sliders .slider-scale, bodify-ui .drawer .slider-scale { height: 8px; margin-top: -4px; font-size: 6px; }
+
+  bodify-ui .output-strip { padding: 12px 8px 8px; display: grid; grid-template-rows: 18px 10px minmax(0,1fr) 30px 40px 38px; gap: 6px; }
+  bodify-ui .output-stack { min-height: 0; display: flex; align-items: stretch; justify-content: center; gap: 8px; }
+  bodify-ui .output-meter { width: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+  bodify-ui .output-fader { --norm: .6667; width: 48px; position: relative; display: grid; grid-template-rows: 1fr; justify-items: center; }
+  bodify-ui .fader-track { width: 42px; height: 100%; position: relative; cursor: ns-resize; touch-action: none; }
+  bodify-ui .fader-track::before { content: ""; position: absolute; top: 0; bottom: 0; left: 18px; width: 6px; border-radius: 4px; background: linear-gradient(to top,var(--accent) 0 calc(var(--norm)*100%),#2c393f calc(var(--norm)*100%)); box-shadow: inset 0 1px 2px #050708; }
+  bodify-ui .fader-thumb { position: absolute; z-index: 2; left: 5px; bottom: calc(var(--norm)*100%); width: 32px; height: 18px; margin-bottom: -9px; border: 1px solid #65757a; border-radius: 4px; background: linear-gradient(#4c5a5f,#243035); box-shadow: inset 0 1px rgba(255,255,255,.14),0 3px 6px rgba(0,0,0,.6); }
+  bodify-ui .fader-thumb::after { content: ""; position: absolute; left: 14px; top: 4px; bottom: 4px; width: 2px; background: #c6f7f1; }
+  bodify-ui .fader-scale { position: absolute; z-index: 3; top: 1px; right: -1px; bottom: 1px; display: flex; flex-direction: column; justify-content: space-between; color: #617177; font-size: 6px; font-weight: 700; pointer-events: none; }
+  bodify-ui .fader-scale b { font: inherit; }
+  bodify-ui .fader-value { height: 30px; display: grid; place-items: center; border: 1px solid #34464d; border-radius: 4px; background: #081013; color: #7fe9dc; font-size: 10px; font-variant-numeric: tabular-nums; cursor: text; user-select: text; }
+  bodify-ui .clip-reset { min-height: 40px; padding: 0 6px; display: grid; place-items: center; align-content: center; gap: 2px; color: #77878c; font-size: 7px; font-weight: 700; letter-spacing: .6px; }
+  bodify-ui .clip-reset b { color: #aebabe; font-size: 8px; font-weight: 550; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  bodify-ui .clip-reset.cleared { border-color: #467169; color: #75ded1; }
+  bodify-ui .toggle { min-height: 40px; min-width: 0; padding: 0 8px; display: flex; align-items: center; justify-content: space-between; gap: 6px; border: 1px solid #344249; border-radius: 5px; background: #151d21; color: #8e9b9f; cursor: pointer; font-size: 7px; font-weight: 650; letter-spacing: .6px; }
+  bodify-ui .toggle b { color: #66757a; font-size: 7px; }
+  bodify-ui .toggle.on { color: #bceee8; border-color: #3e6b65; background: #142925; }
+  bodify-ui .toggle.on b { color: #6be0d2; }
+  bodify-ui .segmented { min-height: 38px; display: flex; overflow: hidden; border: 1px solid #344249; border-radius: 5px; }
+  bodify-ui .segmented button { flex: 1; min-width: 0; border: 0; border-right: 1px solid #2d393f; background: #141c20; color: #75848a; cursor: pointer; font-size: 8px; font-weight: 650; }
+  bodify-ui .segmented button:last-child { border-right: 0; }
+  bodify-ui .segmented button.selected { color: #7ee8dc; background: #17302c; box-shadow: inset 0 -3px var(--accent); }
+
+  bodify-ui .drawer { position: absolute; z-index: 20; top: 60px; right: 0; bottom: 0; width: 420px; padding: 16px; overflow-y: auto; border-left: 1px solid #3c4b51; background: rgba(12,18,21,.985); box-shadow: -24px 0 52px rgba(0,0,0,.62); transform: translateX(100%); transition: transform .2s ease; }
+  bodify-ui .synth-drawer { width: 460px; }
+  bodify-ui .chassis[data-drawer="detector"] .detector-drawer, bodify-ui .chassis[data-drawer="synth"] .synth-drawer { transform: translateX(0); }
+  bodify-ui .drawer-head { min-height: 52px; display: flex; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid var(--line); }
+  bodify-ui .drawer-head strong { display: block; font-size: 14px; font-weight: 550; letter-spacing: 1.2px; }
+  bodify-ui .drawer-head span { display: block; margin-top: 4px; color: #74838a; font-size: 9px; line-height: 1.35; }
+  bodify-ui .drawer-close { width: 44px; height: 44px; padding: 0; font-size: 18px; }
+  bodify-ui .detector-overview { margin: 14px 0; padding: 12px; display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; border: 1px solid var(--line); border-radius: 6px; background: #0c1316; }
+  bodify-ui .detect-status { color: #73ded1; font-size: 10px; font-weight: 700; letter-spacing: .8px; }
+  bodify-ui .detector-overview strong { font-size: 18px; font-weight: 520; }
+  bodify-ui .detector-overview p { grid-column: 1 / -1; margin: 4px 0 0; color: #7d8b90; font-size: 9px; line-height: 1.45; }
+  bodify-ui .threshold-readout { color: var(--warning); font-size: 11px; font-weight: 600; }
+  bodify-ui .learn-button { width: 100%; height: 46px; color: #c6d0d3; }
+  bodify-ui .learn-button b { font-size: 9px; letter-spacing: .8px; }
+  bodify-ui .peak-area { padding: 15px 0; }
+  bodify-ui .peak-area > label, bodify-ui .advanced-row > label { display: block; margin-bottom: 9px; color: #7a898f; font-size: 8px; font-weight: 650; letter-spacing: 1px; }
+  bodify-ui .peak-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  bodify-ui .peak-chip { min-height: 48px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; border: 1px solid #344249; border-radius: 5px; background: #141c20; color: #aeb9bc; cursor: pointer; }
+  bodify-ui .peak-chip strong { font-size: 11px; font-weight: 550; }
+  bodify-ui .peak-chip span { color: #74838a; font-size: 9px; }
+  bodify-ui .peak-chip.selected { color: #f0c46f; border-color: #705d38; background: #251f14; box-shadow: inset 0 -3px var(--source); }
+  bodify-ui .advanced-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  bodify-ui .detect-status.working { color: var(--warning); animation: pulse 1s infinite; }
+
+  bodify-ui .synth-summary { height: 38px; display: flex; align-items: center; color: #76e4d7; font-size: 9px; font-weight: 700; letter-spacing: 1px; }
+  bodify-ui .synth-route { margin-bottom: 14px; }
+  bodify-ui .route-controls { padding: 10px 0 12px; display: grid; grid-template-columns: repeat(3,1fr); align-items: end; gap: 10px; border-bottom: 1px solid var(--line); }
+  bodify-ui .replace-control { display: none; }
+  bodify-ui .chassis[data-synth="2"] .layer-control { display: none; }
+  bodify-ui .chassis[data-synth="2"] .replace-control { display: block; }
+  bodify-ui .synth-mixer { margin-top: 14px; display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+  bodify-ui .synth-channel { min-width: 0; padding: 10px; display: grid; align-content: start; gap: 12px; border: 1px solid #344249; border-radius: 6px; background: #11191d; }
+  bodify-ui .synth-channel.disabled .parameter-slider { opacity: .28; pointer-events: none; filter: saturate(.3); }
+  bodify-ui .synth-channel .slider-head { height: 42px; display: grid; justify-items: start; align-content: center; gap: 3px; }
+  bodify-ui .synth-channel .slider-head label { font-size: 8px; }
+  bodify-ui .synth-channel .slider-value { width: 100%; min-width: 0; height: 24px; font-size: 9px; }
+  bodify-ui .synth-off-note { display: none; margin-top: 26px; padding: 22px; border: 1px solid var(--line); border-radius: 6px; color: #7b8a90; font-size: 10px; line-height: 1.55; text-align: center; }
+  bodify-ui .chassis[data-synth="0"] .route-controls, bodify-ui .chassis[data-synth="0"] .synth-mixer { display: none; }
+  bodify-ui .chassis[data-synth="0"] .synth-off-note { display: block; }
+  @keyframes pulse { 50% { opacity: .38; } }
+</style>
+
+<style data-theme="resonance-workbench">
+  html, body { width:100%; height:100%; overflow:hidden; background:#05080a; }
+  bodify-ui {
+    --accent:#63e1d2;
+    --accent-soft:rgba(99,225,210,.15);
+    --source:#f0b95a;
+    --target:#6bb2ff;
+    --warning:#ffd06a;
+    --clip:#ff7469;
+    --panel:#0d1418;
+    --raised:#121c21;
+    --raised-2:#17242a;
+    --line:rgba(166,190,198,.15);
+    --line-bright:rgba(166,200,207,.27);
+    --text:#eef4f5;
+    --muted:#86969c;
+    --header-h:60px;
+    display:block;
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
+    font-size:12px;
+    color:var(--text);
+  }
+  bodify-ui * { scrollbar-width:none; }
+  bodify-ui *::-webkit-scrollbar { display:none; }
+  bodify-ui button:focus-visible,
+  bodify-ui [role="slider"]:focus-visible,
+  bodify-ui [role="textbox"]:focus-visible {
+    outline:2px solid rgba(99,225,210,.75);
+    outline-offset:2px;
+  }
+  bodify-ui .chassis {
+    width:100%;
+    height:100%;
+    min-width:0;
+    min-height:0;
+    border:0;
+    border-radius:0;
+    background:
+      radial-gradient(900px 420px at 52% 28%,rgba(33,68,72,.17),transparent 68%),
+      linear-gradient(145deg,#090e11,#060a0c 58%,#080d10);
+    box-shadow:inset 0 1px rgba(255,255,255,.07);
+  }
+  bodify-ui .chassis::before {
+    content:"";
+    position:absolute;
+    inset:0;
+    z-index:0;
+    pointer-events:none;
+    opacity:.22;
+    background-image:linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px);
+    background-size:100% 4px;
+  }
+  bodify-ui .topbar,
+  bodify-ui .main { position:relative; z-index:1; }
+
+  bodify-ui .topbar {
+    height:var(--header-h);
+    padding:0 14.72px;
+    grid-template-columns:minmax(180px,220px) 1fr auto;
+    border-bottom:1px solid rgba(158,185,192,.16);
+    background:linear-gradient(180deg,rgba(17,25,29,.98),rgba(10,16,19,.98));
+    box-shadow:0 8px 24px rgba(0,0,0,.18);
+  }
+  bodify-ui .brand { gap:11px; }
+  bodify-ui .brand-mark {
+    width:40px;
+    height:40px;
+    border-color:rgba(99,225,210,.75);
+    border-radius:9px;
+    background:linear-gradient(145deg,rgba(34,91,84,.72),rgba(10,30,29,.88));
+    color:#8af3e5;
+    font-size:21.12px;
+    box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 22px rgba(99,225,210,.07);
+  }
+  bodify-ui .brand-name {
+    font-size:19.84px;
+    font-weight:560;
+    letter-spacing:.18em;
+  }
+  bodify-ui .brand-sub {
+    margin-top:2px;
+    color:#75868c;
+    font-size:10px;
+    letter-spacing:.14em;
+  }
+  bodify-ui .top-actions { gap:8px; }
+  bodify-ui .effect-led { width:8px; height:8px; margin:0 2px 0 4px; }
+  bodify-ui .drawer-trigger,
+  bodify-ui .tooltip-toggle,
+  bodify-ui .compare button,
+  bodify-ui .snap-button,
+  bodify-ui .focus-solo,
+  bodify-ui .solo-lock,
+  bodify-ui .drawer-close,
+  bodify-ui .learn-button,
+  bodify-ui .clip-reset {
+    min-height:40.28px;
+    border-color:rgba(150,179,187,.2);
+    border-radius:7px;
+    background:linear-gradient(180deg,rgba(26,38,43,.92),rgba(17,26,30,.95));
+    box-shadow:inset 0 1px rgba(255,255,255,.055),0 2px 6px rgba(0,0,0,.18);
+  }
+  bodify-ui .drawer-trigger {
+    min-width:90px;
+    padding:0 13px;
+    font-size:10px;
+    font-weight:680;
+    letter-spacing:.08em;
+  }
+  bodify-ui .drawer-trigger:hover,
+  bodify-ui .drawer-trigger.selected {
+    border-color:rgba(99,225,210,.45);
+    color:#91efe4;
+    background:linear-gradient(180deg,rgba(29,64,60,.8),rgba(17,40,38,.9));
+  }
+  bodify-ui .tooltip-toggle {
+    min-width:58px;
+    min-height:40.28px;
+    padding:0 10px;
+    border-color:rgba(150,179,187,.2);
+    border-radius:7px;
+    background:linear-gradient(180deg,rgba(26,38,43,.92),rgba(17,26,30,.95));
+  }
+  bodify-ui .tooltip-toggle:hover {
+    border-color:rgba(99,225,210,.36);
+    color:#dbe9e8;
+  }
+  bodify-ui .tooltip-toggle[aria-pressed="true"] {
+    border-color:rgba(99,225,210,.38);
+    background:linear-gradient(180deg,rgba(26,55,52,.88),rgba(16,35,34,.95));
+  }
+  bodify-ui .synth-drawer[data-available="false"] .synth-route,
+  bodify-ui .synth-drawer[data-available="false"] .route-controls,
+  bodify-ui .synth-drawer[data-available="false"] .synth-mixer,
+  bodify-ui .synth-drawer[data-available="false"] .synth-inspector {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui .synth-drawer[data-available="false"] .synth-off-note {
+    color:#c8a663;
+    border-color:rgba(200,166,99,.28);
+    background:rgba(74,55,22,.2);
+  }
+  bodify-ui .advanced-grid[aria-label="Planned M2 detector controls"] {
+    opacity:.38;
+    pointer-events:none;
+    filter:saturate(.25);
+  }
+  bodify-ui button[aria-disabled="true"] { cursor:not-allowed; }
+  bodify-ui .compare {
+    height:40.28px;
+    border-color:rgba(150,179,187,.2);
+    border-radius:7px;
+    background:#10181c;
+  }
+  bodify-ui .compare button {
+    width:74px;
+    min-height:100%;
+    font-size:9px;
+    letter-spacing:.07em;
+  }
+  bodify-ui .compare button.selected {
+    color:#a3f7ed;
+    background:linear-gradient(180deg,rgba(26,63,59,.92),rgba(19,45,43,.95));
+    box-shadow:inset 0 -3px var(--accent);
+  }
+
+  bodify-ui .main {
+    height:calc(100% - var(--header-h));
+    padding:14px;
+    grid-template-columns:92px minmax(0,1fr) 110px;
+    gap:12.8px;
+  }
+  bodify-ui .input-strip,
+  bodify-ui .output-strip,
+  bodify-ui .analyzer,
+  bodify-ui .control-surface {
+    border:1px solid var(--line);
+    border-radius:12px;
+    background:linear-gradient(145deg,rgba(17,26,30,.97),rgba(11,18,21,.97));
+    box-shadow:inset 0 1px rgba(255,255,255,.035),0 10px 28px rgba(0,0,0,.2);
+  }
+  bodify-ui .rail-title {
+    color:#c7d1d4;
+    font-size:11.52px;
+    letter-spacing:.12em;
+  }
+  bodify-ui .rail-subtitle {
+    color:#66777d;
+    font-size:10px;
+    letter-spacing:.08em;
+  }
+
+  bodify-ui .input-strip {
+    padding:11.52px 8.96px;
+    grid-template-rows:20px 14px minmax(0,1fr) 28px 44px;
+    gap:5px;
+  }
+  bodify-ui .input-meter {
+    width:min(60px,100%);
+    padding:6px;
+    gap:5px;
+    border-color:rgba(151,178,185,.16);
+    border-radius:8px;
+    background:#05090b;
+    box-shadow:inset 0 0 12px rgba(0,0,0,.75);
+  }
+  bodify-ui .detector-bar,
+  bodify-ui .mini-meter {
+    border-color:rgba(132,159,166,.12);
+    border-radius:3px;
+    background:#040708;
+  }
+  bodify-ui .meter-fill {
+    left:2px;
+    right:2px;
+    border-radius:2px;
+    background:linear-gradient(to top,#52d9c3 0 78%,#f0bd5d 79% 91%,#ff7469 92%);
+    box-shadow:0 0 10px rgba(82,217,195,.12);
+  }
+  bodify-ui[data-preview="true"] .meter-fill { height:56%; }
+  bodify-ui .threshold-line { left:-10px; right:-10px; }
+  bodify-ui .threshold-line::before { top:21px; height:2px; }
+  bodify-ui .threshold-line::after {
+    left:-1px;
+    top:15px;
+    width:12px;
+    height:12px;
+    border-width:2px;
+    background:#11181b;
+  }
+  bodify-ui .threshold-line b {
+    min-width:50px;
+    top:-1px;
+    padding:3px 5px;
+    border:1px solid rgba(255,208,106,.18);
+    border-radius:5px;
+    background:rgba(39,31,14,.94);
+    font-size:10px;
+    white-space:nowrap;
+  }
+  bodify-ui .threshold-line b em { font-style:normal; }
+  bodify-ui .input-value {
+    font-size:11.52px;
+    color:#c2cccf;
+  }
+  bodify-ui .gate-state {
+    gap:6px;
+    font-size:9px;
+    letter-spacing:.08em;
+  }
+
+  bodify-ui .work-area {
+    grid-template-rows:minmax(0,1.618fr) minmax(0,1fr);
+    gap:12.8px;
+  }
+  bodify-ui .analyzer {
+    --source-x:.36355;
+    --target-x:.36355;
+    --band-low:.30870;
+    --band-high:.41841;
+    overflow:hidden;
+    background:
+      radial-gradient(500px 220px at 38% 58%,rgba(35,76,77,.12),transparent 70%),
+      #080e11;
+  }
+  bodify-ui .analyzer-head {
+    height:53.96px;
+    padding:0 12.8px;
+    grid-template-columns:minmax(112px,.75fr) minmax(188px,1.35fr) auto auto;
+    gap:10.24px;
+    border-bottom:1px solid rgba(151,179,186,.14);
+    background:linear-gradient(180deg,rgba(21,31,36,.96),rgba(14,22,26,.96));
+  }
+  bodify-ui .section-title strong {
+    font-size:12.8px;
+    letter-spacing:.12em;
+  }
+  bodify-ui .analysis-state {
+    display:flex !important;
+    align-items:center;
+    gap:6px;
+    margin-top:4px !important;
+    color:#7fded3 !important;
+    font-size:9px !important;
+    font-weight:700;
+    letter-spacing:.08em;
+  }
+  bodify-ui .analysis-state i {
+    width:6px;
+    height:6px;
+    border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 8px rgba(99,225,210,.7);
+  }
+  bodify-ui .pitch-path {
+    width:100%;
+    max-width:320px;
+    grid-template-columns:minmax(72px,1fr) 34px minmax(72px,1fr);
+  }
+  bodify-ui .pitch-node { gap:1px 7px; }
+  bodify-ui .pitch-node { grid-template-columns:auto auto; }
+  bodify-ui .analyzer-source { justify-content:end; }
+  bodify-ui .analyzer-target { justify-content:start; }
+  bodify-ui .pitch-node label {
+    font-size:9px;
+    letter-spacing:.1em;
+  }
+  bodify-ui .pitch-node strong {
+    font-size:16.64px;
+    font-weight:590;
+  }
+  bodify-ui .pitch-node span {
+    font-size:11.52px;
+  }
+  bodify-ui .pitch-arrow { margin:0 7px; }
+  bodify-ui .band-audition {
+    position:static;
+    display:flex;
+    gap:5px;
+    transform:none;
+  }
+  bodify-ui .focus-solo {
+    width:112px;
+    height:39.52px;
+    padding:0 9px;
+    justify-content:center;
+    border-color:rgba(240,185,90,.34);
+    background:linear-gradient(180deg,rgba(58,43,20,.86),rgba(35,28,17,.9));
+    color:#f4c66f;
+  }
+  bodify-ui .focus-solo span {
+    gap:0;
+    font-size:9px;
+    letter-spacing:.04em;
+  }
+  bodify-ui .focus-solo b { display:none; }
+  bodify-ui .solo-lock {
+    width:46px;
+    height:39.52px;
+    font-size:8px;
+  }
+  bodify-ui .snap-button {
+    min-width:80px;
+    height:39.52px;
+    min-height:0;
+    font-size:9px;
+  }
+  bodify-ui .spectrum-fallback,
+  bodify-ui .spectrum-canvas {
+    position:absolute;
+    z-index:1;
+    left:0;
+    right:0;
+    top:53.96px;
+    width:100%;
+    height:calc(100% - 53.96px);
+  }
+  bodify-ui .spectrum-fallback {
+    z-index:0;
+    display:none;
+    opacity:.9;
+    transition:opacity .12s ease;
+  }
+  bodify-ui[data-preview="true"] .spectrum-fallback { display:block; }
+  bodify-ui .interactive .spectrum-fallback { opacity:0; }
+  bodify-ui .spectrum-canvas { display:block; cursor:grab; touch-action:none; }
+  bodify-ui .focus-band {
+    position:absolute;
+    z-index:2;
+    top:53.96px;
+    bottom:24px;
+    left:calc(var(--source-x) * 100%);
+    width:1px;
+    pointer-events:none;
+  }
+  bodify-ui .focus-band::before {
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    width:2px;
+    background:var(--source);
+    box-shadow:0 0 12px rgba(240,185,90,.42);
+  }
+  bodify-ui .focus-band::after {
+    content:"";
+    position:absolute;
+    left:-5px;
+    top:8px;
+    width:10px;
+    height:5px;
+    border-radius:1px 1px 5px 5px;
+    background:var(--source);
+  }
+  bodify-ui .width-handles {
+    position:absolute;
+    z-index:2;
+    inset:53.96px 0 24px;
+    pointer-events:none;
+  }
+  bodify-ui .width-handles::before,
+  bodify-ui .width-handles::after {
+    content:"";
+    position:absolute;
+    top:42%;
+    width:12px;
+    height:42px;
+    border:1px solid rgba(255,208,120,.78);
+    border-radius:4px;
+    background:linear-gradient(180deg,#f0bc5d,#bc7f28);
+    box-shadow:0 4px 12px rgba(0,0,0,.42),0 0 10px rgba(240,185,90,.16);
+    transform:translate(-50%,-50%);
+  }
+  bodify-ui .width-handles::before { left:calc(var(--band-low) * 100%); }
+  bodify-ui .width-handles::after { left:calc(var(--band-high) * 100%); }
+  bodify-ui .band-width-value {
+    z-index:4;
+    bottom:8px;
+    min-width:78px;
+    height:28px;
+    border-color:rgba(240,185,90,.38);
+    border-radius:6px;
+    background:rgba(28,21,11,.94);
+    color:#ffd078;
+    font-size:11px;
+  }
+  bodify-ui .target-tag {
+    top:calc(53.96px + 10px);
+    padding:3px 6px;
+    border-radius:4px;
+    background:rgba(8,17,25,.78);
+    font-size:9px;
+  }
+
+  bodify-ui .control-surface {
+    grid-template-columns:minmax(210px,.618fr) minmax(330px,1fr);
+    overflow:hidden;
+  }
+  bodify-ui .tune-zone {
+    position:relative;
+    overflow:hidden;
+    border-right:1px solid var(--line);
+    background:
+      radial-gradient(220px 170px at 50% 58%,rgba(71,122,131,.12),transparent 72%),
+      linear-gradient(145deg,rgba(17,27,31,.98),rgba(11,18,21,.98));
+  }
+  bodify-ui .tune-title {
+    top:10.64px;
+    left:12.8px;
+    z-index:4;
+  }
+  bodify-ui .tune-title strong {
+    font-size:12.8px;
+    letter-spacing:.12em;
+  }
+  bodify-ui .tune-title span {
+    margin-top:3px;
+    font-size:10px;
+  }
+  bodify-ui .knob.hero {
+    position:absolute;
+    left:50%;
+    top:50%;
+    transform:translate(-50%,-46%);
+  }
+  bodify-ui .knob-dial {
+    width:197.6px;
+    height:197.6px;
+    filter:drop-shadow(0 11px 13px rgba(0,0,0,.5));
+  }
+  bodify-ui .knob-scale .scale-track {
+    stroke:#304047;
+    stroke-width:4.6;
+  }
+  bodify-ui .knob-scale .scale-value {
+    stroke-width:5.8;
+    filter:drop-shadow(0 0 3px color-mix(in srgb,var(--knob-accent) 68%,transparent));
+  }
+  bodify-ui .knob-scale .scale-ticks .minor { opacity:.2; }
+  bodify-ui .knob-scale .scale-ticks .major { opacity:.8; stroke-width:1.25; }
+  bodify-ui .knob-dial .cap {
+    inset:15%;
+    border-color:rgba(164,188,195,.34);
+    background:
+      radial-gradient(circle at 40% 32%,rgba(105,124,131,.18),transparent 34%),
+      linear-gradient(145deg,#27343a,#10171a 65%);
+    box-shadow:
+      inset 0 1px 1px rgba(255,255,255,.14),
+      inset 0 -12px 24px rgba(0,0,0,.45),
+      0 0 0 5px #080d10,
+      0 8px 18px rgba(0,0,0,.52);
+  }
+  bodify-ui .knob-dial .cap b {
+    top:-14%;
+    width:4px;
+    height:58%;
+    margin-left:-2px;
+    border-radius:2px;
+  }
+  bodify-ui .knob-landmarks {
+    font-size:9.6px;
+  }
+  bodify-ui .tune-readout {
+    top:50%;
+    bottom:auto;
+    left:50%;
+    min-width:0;
+    height:auto;
+    padding:0;
+    transform:translate(-50%,-20%);
+    border:0;
+    background:transparent;
+    color:#91caff;
+    font-size:25.6px;
+    font-weight:570;
+    letter-spacing:.01em;
+    text-shadow:0 0 14px rgba(107,178,255,.26);
+  }
+  bodify-ui .shape-zone {
+    min-width:0;
+    padding:14.72px 17.28px;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+  }
+  bodify-ui .zone-head {
+    height:auto;
+    min-height:25.84px;
+  }
+  bodify-ui .zone-head strong {
+    font-size:12.8px;
+    letter-spacing:.1em;
+  }
+  bodify-ui .zone-head span {
+    align-self:center;
+    font-size:10px;
+  }
+  bodify-ui .shape-sliders {
+    height:auto;
+    min-height:0;
+    grid-template-rows:repeat(3,minmax(0,1fr));
+  }
+  bodify-ui .shape-sliders .parameter-slider {
+    min-height:0;
+    display:grid;
+    grid-template-columns:104.96px minmax(0,1fr) 81.92px;
+    grid-template-rows:minmax(30px,1fr) 11px;
+    grid-template-areas:"label track value" "label scale value";
+    align-items:center;
+    column-gap:12.8px;
+    border-bottom:1px solid rgba(156,181,187,.1);
+  }
+  bodify-ui .shape-sliders .parameter-slider:last-child { border-bottom:0; }
+  bodify-ui .shape-sliders .slider-head { display:contents; }
+  bodify-ui .shape-sliders .slider-head label {
+    grid-area:label;
+    font-size:12px;
+    letter-spacing:.06em;
+  }
+  bodify-ui .shape-sliders .slider-value {
+    grid-area:value;
+    width:100%;
+    min-width:0;
+    height:31.92px;
+    border-color:rgba(145,177,185,.2);
+    border-radius:6px;
+    background:rgba(6,13,16,.86);
+    color:#8ceadd;
+    font-size:12.8px;
+  }
+  bodify-ui .shape-sliders .slider-track {
+    grid-area:track;
+    width:100%;
+    height:38.76px;
+  }
+  bodify-ui .shape-sliders .slider-rail,
+  bodify-ui .shape-sliders .slider-fill {
+    top:50%;
+    height:9.12px;
+    transform:translateY(-50%);
+    border-radius:7px;
+  }
+  bodify-ui .shape-sliders .slider-rail {
+    background:#29373d;
+    box-shadow:inset 0 2px 3px rgba(0,0,0,.72);
+  }
+  bodify-ui .shape-sliders .slider-fill {
+    background:linear-gradient(90deg,#49bcaf,#83eadf);
+    box-shadow:0 0 10px rgba(99,225,210,.2);
+  }
+  bodify-ui .shape-sliders .slider-zero {
+    top:50%;
+    width:2px;
+    height:28.88px;
+    transform:translate(-1px,-50%);
+    background:#b5c5c8;
+  }
+  bodify-ui .shape-sliders .slider-thumb {
+    top:50%;
+    width:25px;
+    height:35.72px;
+    margin-left:-12.5px;
+    transform:translateY(-50%);
+    border-color:rgba(186,209,214,.48);
+    border-radius:6px;
+    background:linear-gradient(90deg,#26343a,#5a6c72 50%,#202b30);
+    box-shadow:inset 0 1px rgba(255,255,255,.18),0 5px 9px rgba(0,0,0,.52);
+  }
+  bodify-ui .shape-sliders .slider-thumb::after {
+    left:5px;
+    right:5px;
+    top:50%;
+    transform:translateY(-1px);
+    background:#d9fffa;
+  }
+  bodify-ui .shape-sliders .slider-scale {
+    grid-area:scale;
+    height:11px;
+    margin:0;
+    font-size:8px;
+    letter-spacing:.06em;
+  }
+
+  bodify-ui .output-strip {
+    padding:11.52px 8.96px;
+    grid-template-rows:20px 14px minmax(0,1fr) 32px 42px 40px 38px;
+    gap:5px;
+  }
+  bodify-ui .output-stack { gap:8px; }
+  bodify-ui .output-meter { width:28px; gap:4px; }
+  bodify-ui .output-fader { width:47.36px; }
+  bodify-ui .fader-track { width:100%; }
+  bodify-ui .fader-track::before {
+    left:50%;
+    width:8px;
+    transform:translateX(-50%);
+    background:linear-gradient(to top,var(--accent) 0 calc(var(--norm)*100%),#2c393f calc(var(--norm)*100%));
+  }
+  bodify-ui .fader-thumb {
+    left:50%;
+    width:38px;
+    height:19.76px;
+    margin-left:0;
+    transform:translateX(-50%);
+    border-radius:5px;
+  }
+  bodify-ui .fader-thumb::after {
+    left:50%;
+    top:4px;
+    bottom:4px;
+    transform:translateX(-1px);
+  }
+  bodify-ui .fader-scale {
+    right:-3px;
+    font-size:8px;
+  }
+  bodify-ui .fader-value {
+    height:32px;
+    border-radius:6px;
+    font-size:12.16px;
+  }
+  bodify-ui .clip-reset {
+    min-height:42px;
+    padding:0 5px;
+    font-size:8px;
+  }
+  bodify-ui .clip-reset b { font-size:9px; }
+  bodify-ui .output-strip .toggle,
+  bodify-ui .output-strip .segmented { min-height:38px; }
+  bodify-ui .toggle,
+  bodify-ui .segmented button { font-size:9px; }
+
+  bodify-ui .drawer {
+    top:var(--header-h);
+    bottom:0;
+    width:min(580px,calc(100% - 390px));
+    padding:17.28px;
+    overflow:hidden;
+    border-left:1px solid rgba(171,201,208,.24);
+    background:
+      radial-gradient(500px 300px at 100% 0,rgba(41,93,87,.13),transparent 70%),
+      #090f12;
+    box-shadow:-28px 0 70px rgba(0,0,0,.58);
+  }
+  bodify-ui .detector-drawer { width:min(480px,calc(100% - 390px)); }
+  bodify-ui .synth-drawer { width:min(580px,calc(100% - 390px)); }
+  bodify-ui .drawer-head {
+    min-height:53.2px;
+    border-bottom-color:var(--line);
+  }
+  bodify-ui .drawer-head strong {
+    font-size:15.36px;
+    letter-spacing:.1em;
+  }
+  bodify-ui .drawer-head span {
+    margin-top:3px;
+    font-size:10px;
+  }
+  bodify-ui .drawer-close {
+    width:44px;
+    height:41.8px;
+  }
+  bodify-ui .detector-overview {
+    margin:10.64px 0;
+    padding:12px;
+    border-color:var(--line);
+    border-radius:8px;
+    background:rgba(13,21,24,.84);
+  }
+  bodify-ui .detector-overview strong { font-size:20px; }
+  bodify-ui .detector-overview .detect-status { display:block; margin-bottom:4px; }
+  bodify-ui .detector-overview p { font-size:10px; }
+  bodify-ui .learn-button { height:45.6px; }
+  bodify-ui .peak-area { padding:11.4px 0; }
+  bodify-ui .peak-area > label,
+  bodify-ui .advanced-row > label {
+    margin-bottom:7px;
+    font-size:9px;
+  }
+  bodify-ui .peak-chip {
+    min-height:45.6px;
+    border-radius:7px;
+  }
+  bodify-ui .advanced-grid {
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+  bodify-ui .contour-strength { grid-column:1 / -1; }
+  bodify-ui .contour-strength .parameter-slider {
+    display:grid;
+    grid-template-columns:1fr 1.7fr;
+    column-gap:12px;
+    align-items:center;
+  }
+  bodify-ui .contour-strength .slider-head { grid-column:1; }
+  bodify-ui .contour-strength .slider-track,
+  bodify-ui .contour-strength .slider-scale { grid-column:2; }
+
+  bodify-ui .synth-summary {
+    height:28.88px;
+    font-size:10px;
+  }
+  bodify-ui .synth-route {
+    min-height:40px;
+    margin-bottom:9.12px;
+  }
+  bodify-ui .route-controls {
+    padding:0 0 9.88px;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:11px 14px;
+  }
+  bodify-ui .route-controls .parameter-slider {
+    display:grid;
+    grid-template-columns:1fr auto;
+    align-items:center;
+  }
+  bodify-ui .route-controls .slider-head {
+    grid-column:1 / -1;
+    height:24px;
+  }
+  bodify-ui .route-controls .slider-track {
+    grid-column:1 / -1;
+    height:30px;
+  }
+  bodify-ui .route-controls .slider-scale {
+    grid-column:1 / -1;
+    margin-top:-5px;
+  }
+  bodify-ui .synth-mixer {
+    margin-top:9.12px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+  }
+  bodify-ui .synth-channel {
+    padding:10px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    grid-template-rows:34px minmax(0,1fr);
+    gap:5px 7px;
+    border-color:var(--line);
+    border-radius:8px;
+    background:linear-gradient(145deg,rgba(20,31,35,.96),rgba(13,21,24,.96));
+  }
+  bodify-ui .channel-select {
+    min-width:0;
+    border:0;
+    border-bottom:2px solid transparent;
+    background:transparent;
+    color:#85949a;
+    cursor:pointer;
+    font:700 10px/1 inherit;
+    letter-spacing:.09em;
+    text-align:left;
+  }
+  bodify-ui .channel-select.selected {
+    border-bottom-color:var(--accent);
+    color:#9af0e6;
+  }
+  bodify-ui .synth-channel .toggle {
+    min-height:30px;
+    height:30px;
+    padding:0 7px;
+  }
+  bodify-ui .synth-channel .toggle span { display:none; }
+  bodify-ui .synth-channel .parameter-slider { grid-column:1 / -1; }
+  bodify-ui .synth-channel .slider-head {
+    height:24px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  bodify-ui .synth-channel .slider-value {
+    width:auto;
+    min-width:58px;
+    height:24px;
+  }
+  bodify-ui .synth-channel.disabled { opacity:1; }
+  bodify-ui .synth-channel.disabled .parameter-slider { opacity:.3; pointer-events:auto; }
+  bodify-ui .synth-channel.disabled .parameter-slider .slider-track,
+  bodify-ui .synth-channel.disabled .parameter-slider .slider-value { pointer-events:none; }
+  bodify-ui .synth-channel.disabled .channel-select { color:#76868c; }
+  bodify-ui .synth-channel.disabled .toggle { color:#88989d; border-color:rgba(150,179,187,.2); }
+  bodify-ui .synth-channel.disabled .channel-select { pointer-events:auto; }
+  bodify-ui .synth-channel.disabled .toggle { opacity:1; pointer-events:auto; }
+  bodify-ui .synth-inspector {
+    display:none;
+    margin-top:9.88px;
+    padding:11.52px;
+    grid-template-columns:90px repeat(2,minmax(0,1fr));
+    gap:12.8px;
+    align-items:center;
+    border:1px solid var(--line);
+    border-radius:8px;
+    background:rgba(13,21,24,.86);
+  }
+  bodify-ui .synth-inspector > strong {
+    font-size:10px;
+    letter-spacing:.1em;
+  }
+  bodify-ui .synth-inspector .slider-head { height:25px; }
+  bodify-ui .synth-inspector .slider-track { height:30px; }
+  bodify-ui .synth-drawer[data-channel="body"] .body-detail,
+  bodify-ui .synth-drawer[data-channel="noise"] .noise-detail,
+  bodify-ui .synth-drawer[data-channel="exciter"] .exciter-detail { display:grid; }
+  bodify-ui .chassis[data-synth="0"] .synth-inspector { display:none; }
+  bodify-ui .synth-off-note {
+    margin-top:22.8px;
+    padding:30px;
+    border-radius:9px;
+    font-size:11px;
+  }
+
+  bodify-ui .parameter-help-bank {
+    position:absolute;
+    width:1px;
+    height:1px;
+    padding:0;
+    margin:-1px;
+    overflow:hidden;
+    clip-path:inset(50%);
+    white-space:nowrap;
+  }
+  bodify-ui .parameter-tooltip {
+    position:absolute;
+    z-index:80;
+    left:0;
+    top:0;
+    width:min(240px,calc(100% - 18px));
+    padding:10px 11px 9px;
+    visibility:hidden;
+    opacity:0;
+    pointer-events:none;
+    border:1px solid rgba(121,211,201,.35);
+    border-radius:8px;
+    background:
+      linear-gradient(180deg,rgba(22,35,40,.94),rgba(10,18,21,.94));
+    backdrop-filter:blur(7px);
+    color:#eaf2f3;
+    box-shadow:
+      inset 0 1px rgba(255,255,255,.075),
+      0 12px 26px rgba(0,0,0,.55),
+      0 0 0 1px rgba(0,0,0,.4);
+    transform:translateY(4px);
+    transform-origin:center top;
+    transition:opacity .09s ease,transform .09s ease,visibility 0s linear .09s;
+  }
+  bodify-ui .parameter-tooltip[data-open="true"] {
+    visibility:visible;
+    opacity:1;
+    transform:translateY(0);
+    transition-delay:0s;
+  }
+  bodify-ui .chassis[data-tooltips="off"] .parameter-tooltip {
+    visibility:hidden;
+    opacity:0;
+  }
+  bodify-ui .parameter-tooltip::after {
+    content:"";
+    position:absolute;
+    left:var(--tooltip-arrow-x,50%);
+    width:9px;
+    height:9px;
+    border-right:1px solid rgba(121,211,201,.35);
+    border-bottom:1px solid rgba(121,211,201,.35);
+    background:#0b1417;
+  }
+  bodify-ui .parameter-tooltip[data-placement="above"]::after {
+    bottom:-5px;
+    transform:translateX(-50%) rotate(45deg);
+  }
+  bodify-ui .parameter-tooltip[data-placement="below"]::after {
+    top:-5px;
+    transform:translateX(-50%) rotate(225deg);
+  }
+  bodify-ui .tooltip-kicker {
+    display:block;
+    margin-bottom:4px;
+    color:#70d9cd;
+    font-size:8px;
+    font-weight:750;
+    letter-spacing:.16em;
+  }
+  bodify-ui .tooltip-title {
+    display:block;
+    color:#f2f7f8;
+    font-size:13px;
+    font-weight:650;
+    letter-spacing:.035em;
+  }
+  bodify-ui .tooltip-description {
+    margin:4px 0 6px;
+    color:#b8c6ca;
+    font-size:10.5px;
+    line-height:1.42;
+  }
+  bodify-ui .tooltip-range,
+  bodify-ui .tooltip-usage {
+    display:block;
+    padding-top:6px;
+    border-top:1px solid rgba(158,187,194,.12);
+    font-size:9px;
+    line-height:1.35;
+  }
+  bodify-ui .tooltip-range {
+    color:#91e7dc;
+    font-variant-numeric:tabular-nums;
+  }
+  bodify-ui .tooltip-usage {
+    display:none;
+  }
+
+  @media (max-width:960px), (max-height:600px) {
+    bodify-ui {
+      --header-h:48px;
+      min-width:0;
+      min-height:0;
+    }
+    bodify-ui .topbar {
+      padding:0 9px;
+      grid-template-columns:160px 1fr auto;
+    }
+    bodify-ui .brand { gap:8px; }
+    bodify-ui .brand-mark { width:32px; height:32px; border-radius:7px; font-size:17px; }
+    bodify-ui .brand-name { font-size:15px; }
+    bodify-ui .brand-sub { display:none; }
+    bodify-ui .top-actions { gap:5px; }
+    bodify-ui .drawer-trigger { min-width:64px; min-height:38px; padding:0 8px; font-size:9px; }
+    bodify-ui .tooltip-toggle { min-width:48px; min-height:38px; padding:0 5px; gap:3px; }
+    bodify-ui .help-glyph { width:18px; height:18px; font-size:10px; }
+    bodify-ui .tooltip-toggle-state { font-size:7px; }
+    bodify-ui .effect-led { margin:0; }
+    bodify-ui .compare { height:38px; }
+    bodify-ui .compare button { width:54px; font-size:9px; }
+    bodify-ui .main {
+      padding:8px;
+      grid-template-columns:52px minmax(0,1fr) 64px;
+      gap:6px;
+    }
+    bodify-ui .work-area {
+      grid-template-rows:minmax(190px,1fr) 168px;
+      gap:8px;
+    }
+    bodify-ui .input-strip,
+    bodify-ui .output-strip { padding:7px 5px; }
+    bodify-ui .rail-title { font-size:10px; }
+    bodify-ui .rail-subtitle { display:block; visibility:hidden; height:0; overflow:hidden; }
+    bodify-ui .input-strip { grid-template-rows:18px 0 minmax(0,1fr) 24px 35px; gap:3px; }
+    bodify-ui .input-meter { width:44px; padding:4px; gap:3px; }
+    bodify-ui .threshold-line b { min-width:38px; font-size:9px; }
+    bodify-ui .threshold-line b em { display:none; }
+    bodify-ui .input-value { font-size:9px; letter-spacing:-.02em; white-space:nowrap; }
+    bodify-ui .gate-state { font-size:9px; }
+    bodify-ui .analyzer-head {
+      height:48px;
+      padding:0 7px;
+      grid-template-columns:100px minmax(160px,1fr) auto auto;
+      gap:5px;
+    }
+    bodify-ui .section-title strong { font-size:11px; }
+    bodify-ui .analysis-state { font-size:9px !important; }
+    bodify-ui .pitch-path { grid-template-columns:minmax(58px,1fr) 20px minmax(58px,1fr); }
+    bodify-ui .pitch-node label { display:none; }
+    bodify-ui .pitch-node strong { font-size:12px; }
+    bodify-ui .pitch-node span { font-size:9px; }
+    bodify-ui .focus-solo { width:88px; height:38px; min-height:38px; padding:0 7px; }
+    bodify-ui .focus-solo span { font-size:9px; }
+    bodify-ui .solo-lock { width:38px; height:38px; min-height:38px; font-size:9px; }
+    bodify-ui .snap-button { min-width:58px; width:58px; height:38px; min-height:38px; padding:0 5px; font-size:9px; }
+    bodify-ui .spectrum-fallback,
+    bodify-ui .spectrum-canvas { top:48px; height:calc(100% - 48px); }
+    bodify-ui .focus-band { top:48px; }
+    bodify-ui .width-handles { inset:48px 0 22px; }
+    bodify-ui .target-tag { top:55px; font-size:8px; }
+    bodify-ui .band-width-value { bottom:5px; min-width:66px; height:24px; font-size:9px; }
+    bodify-ui .control-surface { grid-template-columns:180px minmax(0,1fr); }
+    bodify-ui .tune-title { top:7px; left:10px; }
+    bodify-ui .tune-title span { display:none; }
+    bodify-ui .knob-dial { width:132px; height:132px; }
+    bodify-ui .knob-scale .scale-ticks .minor { opacity:.12; }
+    bodify-ui .tune-readout { font-size:22px; }
+    bodify-ui .shape-zone { padding:7px 9px; }
+    bodify-ui .zone-head { min-height:18px; }
+    bodify-ui .zone-head strong { font-size:10px; }
+    bodify-ui .zone-head span { display:none; }
+    bodify-ui .shape-sliders .parameter-slider {
+      grid-template-columns:84px minmax(0,1fr) 64px;
+      grid-template-rows:minmax(44px,1fr);
+      grid-template-areas:"label track value";
+      column-gap:7px;
+    }
+    bodify-ui .shape-sliders .slider-scale { display:none; }
+    bodify-ui .shape-sliders .slider-track { height:30px; }
+    bodify-ui .shape-sliders .slider-value { height:30px; font-size:11px; }
+    bodify-ui .shape-sliders .slider-head label { font-size:11px; white-space:nowrap; }
+    bodify-ui .output-strip {
+      grid-template-rows:18px 0 minmax(0,1fr) 28px 34px 32px 30px;
+      gap:3px;
+    }
+    bodify-ui .output-meter { width:18px; }
+    bodify-ui .output-fader { width:30px; }
+    bodify-ui .fader-scale { display:none; }
+    bodify-ui .fader-value { height:28px; font-size:10px; }
+    bodify-ui .clip-reset { min-height:34px; font-size:7px; }
+    bodify-ui .clip-reset span { display:none; }
+    bodify-ui .clip-reset b { font-size:8px; white-space:nowrap; }
+    bodify-ui .output-strip .toggle,
+    bodify-ui .output-strip .segmented { min-height:30px; font-size:8px; }
+    bodify-ui .output-strip .toggle { padding:0 4px; }
+    bodify-ui .output-strip .toggle span { font-size:0; }
+    bodify-ui .output-strip .toggle span::after { content:"AUTO"; font-size:8px; }
+    bodify-ui .drawer,
+    bodify-ui .synth-drawer,
+    bodify-ui .detector-drawer {
+      width:calc(100% - 304px);
+      padding:9px;
+    }
+    bodify-ui .drawer-head { min-height:42px; }
+    bodify-ui .drawer-head span { display:none; }
+    bodify-ui .drawer-close { width:34px; height:34px; min-height:34px; }
+    bodify-ui .detector-overview { margin:7px 0; padding:8px; }
+    bodify-ui .detector-overview p { display:none; }
+    bodify-ui .learn-button { height:36px; min-height:36px; }
+    bodify-ui .peak-area { padding:7px 0; }
+    bodify-ui .peak-chip { min-height:36px; padding:0 8px; }
+    bodify-ui .advanced-grid { gap:7px; }
+    bodify-ui .segmented { min-height:32px; }
+    bodify-ui .synth-summary { height:20px; }
+    bodify-ui .synth-route { min-height:32px; margin-bottom:6px; }
+    bodify-ui .route-controls { gap:5px 9px; padding-bottom:6px; }
+    bodify-ui .route-controls .slider-head { height:20px; }
+    bodify-ui .route-controls .slider-track { height:24px; }
+    bodify-ui .route-controls .slider-scale { display:none; }
+    bodify-ui .synth-mixer { margin-top:6px; gap:6px; }
+    bodify-ui .synth-channel { padding:6px; grid-template-rows:28px minmax(0,1fr); }
+    bodify-ui .synth-channel .toggle { min-height:26px; height:26px; }
+    bodify-ui .synth-channel .slider-head { height:20px; }
+    bodify-ui .synth-channel .slider-track { height:24px; }
+    bodify-ui .synth-channel .slider-scale { display:none; }
+    bodify-ui .synth-inspector { margin-top:6px; padding:6px; grid-template-columns:72px repeat(2,minmax(0,1fr)); gap:7px; }
+    bodify-ui .synth-inspector .slider-head { height:20px; }
+    bodify-ui .synth-inspector .slider-track { height:24px; }
+    bodify-ui .synth-inspector .slider-scale { display:none; }
+    bodify-ui .parameter-tooltip {
+      width:min(232px,calc(100% - 14px));
+      padding:9px 10px 8px;
+      border-radius:7px;
+    }
+    bodify-ui .tooltip-description { margin:4px 0 6px; font-size:9.5px; }
+    bodify-ui .tooltip-range,
+    bodify-ui .tooltip-usage { padding-top:4px; font-size:8.5px; }
+    bodify-ui .tooltip-usage { margin-top:4px; }
+  }
+</style>
+
+<div class="chassis" data-drawer="none" data-synth="0" data-tooltips="on">
+  <header class="topbar">
+    <div class="brand"><div class="brand-mark">B</div><div><div class="brand-name">BODIFY</div><div class="brand-sub">DRUM BODY RETUNER</div></div></div>
+    <div></div>
+    <div class="top-actions">
+      <button class="drawer-trigger" data-drawer="detector" data-tooltip-control="detector" data-tooltip-title="Detector" data-tooltip="Opens correction tools for difficult or ambiguous body detection without moving the permanent Tune control." data-tooltip-range="Panel: Closed · Open · Default: Closed" data-tooltip-usage="Click to open or close the Detector panel.">DETECTOR</button>
+      <button class="drawer-trigger" data-drawer="synth" data-tooltip-control="body-layer" data-tooltip-title="Body Layer" data-tooltip="Opens the reserved Layer and Replace controls. Their audio engine is planned and is not active in this build." data-tooltip-range="Panel: Closed · Open · Default: Closed" data-tooltip-usage="Click to inspect or close the Body Layer panel.">BODY LAYER</button>
+      <button class="tooltip-toggle" type="button" aria-pressed="true" aria-label="Turn parameter help off" data-tooltip-control="help" data-tooltip-title="Interface Help" data-tooltip="Shows or hides the contextual help bubbles for every parameter and button in the interface." data-tooltip-range="Off · On · Default: On" data-tooltip-usage="Click or press Enter or Space to toggle visual help."><span class="help-glyph" aria-hidden="true">?</span><b class="tooltip-toggle-state">ON</b></button>
+      <i class="effect-led"></i>
+      <div class="compare" data-endpoint-id="param1" data-tooltip-param="param1" data-tooltip-title="Original / Effect" data-tooltip="Switches between the processed signal and the untouched input for an instant A/B comparison." data-tooltip-range="Effect · Original (bypass) · Default: Effect" data-tooltip-usage="Choose a mode." aria-label="Original or effect"><button>ORIGINAL</button><button class="selected">EFFECT</button></div>
+    </div>
+  </header>
+
+  <main class="main">
+    <aside class="input-strip">
+      <div class="rail-title">INPUT</div>
+      <div class="rail-subtitle">HIT GATE</div>
+      <div class="input-meter"><div class="detector-bar"><i class="meter-fill"></i></div><div class="detector-bar"><i class="meter-fill"></i></div><button class="threshold-line" data-endpoint-id="param6" data-tooltip-param="param6" data-tooltip-title="Threshold" data-tooltip="Sets the input level above which a drum hit is detected and body processing is triggered." data-tooltip-range="−70 to 0 dBFS · Default: −48 dBFS" data-tooltip-usage="Drag vertically · Arrow keys adjust · Shift for fine control." role="slider" style="bottom:31.43%"><b><span>−48</span><em> dB</em></b></button></div>
+      <div class="input-value">−12.4 dBFS</div>
+      <div class="gate-state"><i></i><span>HITS ACTIVE</span></div>
+    </aside>
+
+    <section class="work-area">
+      <section class="analyzer">
+        <div class="analyzer-head">
+          <div class="section-title"><strong>BODY MAP</strong><span class="analysis-state"><i></i>AUTO LOCKED</span></div>
+          <div class="pitch-path">
+            <div class="pitch-node analyzer-source"><label>SOURCE</label><strong class="source-frequency" role="textbox">196 Hz</strong><span class="source-note">G3</span></div>
+            <i class="pitch-arrow"></i>
+            <div class="pitch-node analyzer-target"><label>TARGET</label><strong class="target-frequency">196 Hz</strong><span class="target-note">G3</span></div>
+          </div>
+          <div class="band-audition"><button class="focus-solo" data-endpoint-id="param18" data-tooltip-param="param18" data-tooltip-title="Body Solo" data-tooltip="Auditions only the selected body range so the detected resonance can be verified by ear." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Hold Body Solo for momentary audition · Click PIN to keep it active." aria-pressed="false"><span>BODY SOLO</span><b>HOLD</b></button><button class="solo-lock" data-tooltip-param="param18" aria-label="Pin Body Solo" aria-pressed="false">PIN</button></div>
+          <button class="snap-button" data-endpoint-id="param16" data-tooltip-param="param16" data-tooltip-title="Snap" data-tooltip="Quantizes the shifted body resonance to the nearest equal-tempered semitone." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Click to toggle." aria-pressed="false"><b>SNAP OFF</b></button>
+        </div>
+        <svg class="spectrum-fallback" viewBox="0 0 800 240" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="spectrumFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#50dccb" stop-opacity=".24"/><stop offset="1" stop-color="#50dccb" stop-opacity="0"/></linearGradient></defs><path class="spectrum-area" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206 L800 240 L0 240Z" fill="url(#spectrumFill)"/><path class="spectrum-line" d="M0 210 C48 208 82 204 115 197 C135 192 142 115 165 108 C188 104 194 200 222 202 C247 204 265 190 282 72 C294 28 304 34 313 121 C321 192 335 202 360 201 C397 200 404 120 428 116 C451 111 459 195 486 201 C525 208 533 163 558 157 C583 150 594 202 626 204 C664 205 687 172 716 177 C746 182 768 207 800 206" fill="none" stroke="#50dccb" stroke-width="2" vector-effect="non-scaling-stroke"/></svg>
+        <canvas class="spectrum-canvas" data-endpoint-id="param4" data-tooltip-param="param4" data-tooltip-title="Focus" data-tooltip="Sets the center frequency of the body resonance that is detected, auditioned, and tuned." data-tooltip-range="35 Hz to 4.0 kHz · Default: 196 Hz" data-tooltip-usage="Drag the band or choose a resonance suggestion · Click the frequency to type."></canvas>
+        <div class="focus-band" aria-hidden="true"></div>
+        <div class="width-handles" aria-hidden="true"></div>
+        <div class="band-width-value" data-endpoint-id="param5" data-tooltip-param="param5" data-tooltip-title="Width" data-tooltip="Sets the processed bandwidth around Focus; narrow isolates precisely, while wide includes more of the drum body." data-tooltip-range="0.17 to 2.00 oct · Default: 0.75 oct" data-tooltip-usage="Drag either band edge · Click the value to type." role="textbox" aria-label="Body width value">0.75 oct</div>
+        <div class="target-tag">TARGET</div>
+      </section>
+
+      <section class="control-surface">
+        <div class="tune-zone"><div class="tune-title"><strong>TUNE</strong><span>Shift only the selected body</span></div><div class="knob hero" data-endpoint-id="param3" data-tooltip-param="param3" data-tooltip-title="Tune" data-tooltip="Shifts only the selected body resonance by up to one octave while the transient and remaining spectrum stay untouched." data-tooltip-range="−1200 to +1200 ct · Default: 0 ct" data-tooltip-usage="Drag vertically · Shift for fine control · Double-click resets · Click the value to type." style="--norm:0.50000;--angle:0.000deg;--arc-start:50.0000;--arc-length:0.0000;--arc-offset:-50.0000">
+    <div class="knob-label">Tune</div>
+    <div class="knob-dial" role="slider" aria-label="Tune"><svg class="knob-scale" viewBox="0 0 100 100" aria-hidden="true">
+    <path class="scale-track" pathLength="100" d="M 16.559 80.111 A 45 45 0 1 1 83.441 80.111" />
+    <path class="scale-value" pathLength="100" d="M 16.559 80.111 A 45 45 0 1 1 83.441 80.111" />
+    <g class="scale-ticks"><line class="major" x1="20.646" y1="76.431" x2="16.558" y2="80.111" /><line class="minor" x1="13.633" y1="69.993" x2="10.566" y2="71.679" /><line class="minor" x1="10.029" y1="61.160" x2="6.658" y2="62.101" /><line class="minor" x1="8.536" y1="51.738" x2="5.039" y2="51.884" /><line class="minor" x1="9.235" y1="42.224" x2="5.797" y2="41.568" /><line class="major" x1="13.915" y1="33.934" x2="8.890" y2="31.697" /><line class="minor" x1="16.944" y1="24.909" x2="14.156" y2="22.793" /><line class="minor" x1="23.547" y1="18.024" x2="21.316" y2="15.327" /><line class="minor" x1="31.548" y1="12.828" x2="29.991" y2="9.693" /><line class="minor" x1="40.523" y1="9.596" x2="39.724" y2="6.189" /><line class="major" x1="50.000" y1="10.500" x2="50.000" y2="5.000" /><line class="minor" x1="59.477" y1="9.596" x2="60.276" y2="6.189" /><line class="minor" x1="68.452" y1="12.828" x2="70.009" y2="9.693" /><line class="minor" x1="76.453" y1="18.024" x2="78.684" y2="15.327" /><line class="minor" x1="83.056" y1="24.909" x2="85.844" y2="22.793" /><line class="major" x1="86.085" y1="33.934" x2="91.110" y2="31.697" /><line class="minor" x1="90.765" y1="42.224" x2="94.203" y2="41.568" /><line class="minor" x1="91.464" y1="51.738" x2="94.961" y2="51.884" /><line class="minor" x1="89.971" y1="61.160" x2="93.342" y2="62.101" /><line class="minor" x1="86.367" y1="69.993" x2="89.434" y2="71.679" /><line class="major" x1="79.354" y1="76.431" x2="83.442" y2="80.111" /></g>
+  </svg><span class="cap"><b></b></span></div>
+    <div class="knob-landmarks" aria-hidden="true"><span>−12 st</span><span>0</span><span>+12 st</span></div>
+    <div class="knob-value" role="textbox" aria-label="Tune value">0 ct</div>
+  </div><div class="tune-readout" role="textbox">0 ct</div></div>
+        <div class="shape-zone">
+          <div class="zone-head"><strong>BODY RESPONSE</strong><span>Transient and remaining spectrum stay intact</span></div>
+          <div class="shape-sliders"><div class="parameter-slider" data-endpoint-id="param7" data-tooltip-param="param7" data-tooltip-title="Speed" data-tooltip="Sets the pitch-shift time constant; lower values react faster, while higher values sound smoother." data-tooltip-range="15 to 50 ms · Default: 20 ms" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.14286;--zero:0.00000;--fill-start:0.00000;--fill-size:0.14286">
+    <div class="slider-head"><label>Speed</label><span class="slider-value" role="textbox" aria-label="Speed value">20 ms</span></div>
+    <div class="slider-track" role="slider" aria-label="Speed"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>FAST</span><span>SMOOTH</span></div>
+  </div><div class="parameter-slider bipolar" data-endpoint-id="param10" data-tooltip-param="param10" data-tooltip-title="Shift Trim" data-tooltip="Raises or lowers only the shifted body level without changing the rest of the signal." data-tooltip-range="−6.0 to +6.0 dB · Default: 0.0 dB" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.50000;--zero:0.50000;--fill-start:0.50000;--fill-size:0.00000">
+    <div class="slider-head"><label>Shift Trim</label><span class="slider-value" role="textbox" aria-label="Shift Trim value">0.0 dB</span></div>
+    <div class="slider-track" role="slider" aria-label="Shift Trim"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>−6 dB</span><span>+6 dB</span></div>
+  </div><div class="parameter-slider bipolar" data-endpoint-id="param8" data-tooltip-param="param8" data-tooltip-title="Body Decay" data-tooltip="Shortens or lengthens only the shifted body tail; zero preserves its original duration." data-tooltip-range="−100 to +100% · Default: 0%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.50000;--zero:0.50000;--fill-start:0.50000;--fill-size:0.00000">
+    <div class="slider-head"><label>Body Decay</label><span class="slider-value" role="textbox" aria-label="Body Decay value">0%</span></div>
+    <div class="slider-track" role="slider" aria-label="Body Decay"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>SHORTER</span><span>LONGER</span></div>
+  </div></div>
+        </div>
+      </section>
+    </section>
+
+    <aside class="output-strip">
+      <div class="rail-title">OUTPUT</div>
+      <div class="rail-subtitle">GAIN</div>
+      <div class="output-stack"><div class="output-meter"><i class="mini-meter"><b class="meter-fill"></b></i><i class="mini-meter"><b class="meter-fill"></b></i></div><div class="output-fader" data-endpoint-id="param12" data-tooltip-param="param12" data-tooltip-title="Output" data-tooltip="Controls only the plug-in&#39;s final output level." data-tooltip-range="−24.0 to +12.0 dB · Default: 0.0 dB" data-tooltip-usage="Drag vertically · Arrow keys adjust · Shift for fine control · Double-click resets."><div class="fader-track" role="slider" aria-label="Output gain"><i class="fader-thumb"></i></div><span class="fader-scale" aria-hidden="true"><b>+12</b><b>0</b><b>−24</b></span></div></div>
+      <div class="fader-value">0.0 dB</div>
+      <button class="clip-reset" data-tooltip-control="peak-reset" data-tooltip-title="Output Peak" data-tooltip="Displays the highest recent output level and clears the held peak without changing Output gain." data-tooltip-range="Readout: −70 to 0 dBFS" data-tooltip-usage="Click to reset the held output peak."><span>PEAK · CLICK RESET</span><b class="output-peak">−12.4 dBFS</b></button>
+      <button class="toggle on" data-endpoint-id="param11" data-tooltip-param="param11" data-tooltip-title="Auto Gain" data-tooltip="Compensates processing-related level changes so Original and Effect remain easier to compare fairly." data-tooltip-range="Off · On · Default: On" data-tooltip-usage="Click to toggle." aria-pressed="true"><span>AUTO GAIN</span><b class="toggle-state">ON</b></button>
+      <div class="segmented" data-endpoint-id="param17" data-tooltip-param="param17" data-tooltip-title="Stereo Analysis" data-tooltip="Linked analyzes both channels together; Dual analyzes the left and right channels independently." data-tooltip-range="Linked · Dual · Default: Linked" data-tooltip-usage="Choose an analysis mode."><button class="selected" data-value="0">LINK</button><button data-value="1">DUAL</button></div>
+    </aside>
+  </main>
+
+  <aside class="drawer detector-drawer">
+    <div class="drawer-head"><div><strong>DETECTOR</strong><span>Correction tools for difficult or ambiguous hits.</span></div><button class="drawer-close" data-drawer="detector" aria-label="Close detector" data-tooltip-control="close-detector" data-tooltip-title="Close Detector" data-tooltip="Closes the Detector panel and returns to the unchanged main retuning surface." data-tooltip-range="Action: Close panel" data-tooltip-usage="Click or press Enter or Space.">×</button></div>
+    <div class="detector-overview"><div><span class="detect-status">LOCKED</span><strong><span class="source-frequency">196 Hz</span> · <span class="source-note">G3</span></strong></div><span class="threshold-readout">−48 dBFS</span><p>Threshold stays directly on the permanent Input meter. Use Learn only if automatic body selection is wrong.</p></div>
+    <button class="learn-button" data-tooltip-control="refine" data-tooltip-title="Refine Detection" data-tooltip="Listens to the next clean drum hit and refreshes the detected body frequency." data-tooltip-range="States: Ready · Listening · Locked · No Lock" data-tooltip-usage="Click, then play one clean hit above Threshold."><b>LEARN FROM NEXT CLEAN HIT</b></button>
+    <div class="peak-area"><label>BODY RESONANCE SUGGESTIONS</label><div class="peak-grid"><button class="peak-chip" data-tooltip-param="param4" data-frequency="98"><strong>98 Hz · G2</strong><span>68%</span></button><button class="peak-chip selected" data-tooltip-param="param4" data-frequency="196"><strong>196 Hz · G3</strong><span>94%</span></button><button class="peak-chip" data-tooltip-param="param4" data-frequency="392"><strong>392 Hz · G4</strong><span>76%</span></button><button class="peak-chip" data-tooltip-param="param4" data-frequency="784"><strong>784 Hz · G5</strong><span>51%</span></button></div></div>
+    <div class="advanced-grid"><div class="advanced-row"><label>RESONANCES SHOWN</label><div class="segmented" data-endpoint-id="param15" data-tooltip-param="param15" data-tooltip-title="Resonances Shown" data-tooltip="Sets how many detected resonance candidates are displayed for selection in the Body Map." data-tooltip-range="1 to 4 · Default: 2" data-tooltip-usage="Choose the number of suggestions."><button data-value="1">1</button><button class="selected" data-value="2">2</button><button data-value="3">3</button><button data-value="4">4</button></div></div><div class="advanced-row"><label>CONTOUR</label><div class="segmented" data-endpoint-id="param13" data-tooltip-param="param13" data-tooltip-title="Contour" data-tooltip="Chooses whether the detector contour follows the selected body range or stays locked at its current position." data-tooltip-range="Relative · Lock · Default: Relative" data-tooltip-usage="Choose a contour mode."><button class="selected" data-value="0">RELATIVE</button><button data-value="1">LOCK</button></div></div><div class="advanced-row contour-strength"><div class="parameter-slider" data-endpoint-id="param14" data-tooltip-param="param14" data-tooltip-title="Contour Strength" data-tooltip="Sets how strongly the selected contour shapes resonance selection, from subtle to firm." data-tooltip-range="0 to 100% · Default: 35%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.35000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.35000">
+    <div class="slider-head"><label>Contour Strength</label><span class="slider-value" role="textbox" aria-label="Contour Strength value">35%</span></div>
+    <div class="slider-track" role="slider" aria-label="Contour Strength"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>SUBTLE</span><span>FIRM</span></div>
+  </div></div></div>
+  </aside>
+
+  <aside class="drawer synth-drawer" data-channel="body" data-available="false">
+    <div class="drawer-head"><div><strong>BODY LAYER / REPLACE</strong><span>Source-following resynthesis after the retuner core is validated.</span></div><button class="drawer-close" data-drawer="synth" aria-label="Close Body Layer" data-tooltip-control="close-body-layer" data-tooltip-title="Close Body Layer" data-tooltip="Closes the Body Layer panel and returns to the permanent retuning controls." data-tooltip-range="Action: Close panel" data-tooltip-usage="Click or press Enter or Space.">×</button></div>
+    <div class="synth-summary">BODY LAYER · PLANNED</div>
+    <div class="segmented synth-route" data-endpoint-id="param2" data-tooltip-param="param2" data-tooltip-title="Synthesis Routing" data-tooltip="Sets the optional synthesis path: Off disables it, Layer adds a generated body, and Replace substitutes the detected body." data-tooltip-range="Off · Layer · Replace · Default: Off" data-tooltip-usage="Choose a routing mode."><button class="selected" data-value="0">OFF</button><button data-value="1">LAYER</button><button data-value="2">REPLACE</button></div>
+    <div class="synth-off-note">Not active in this build. The controls stay reserved for the versioned parameter contract.</div>
+    <div class="route-controls"><div class="layer-control"><div class="parameter-slider bipolar" data-endpoint-id="param30" data-tooltip-param="param30" data-tooltip-title="Layer Level" data-tooltip="Sets the level of the generated synthesis added in Layer mode." data-tooltip-range="−60.0 to +12.0 dB · Default: −9.0 dB" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.70833;--zero:0.83333;--fill-start:0.70833;--fill-size:0.12500">
+    <div class="slider-head"><label>Layer Level</label><span class="slider-value" role="textbox" aria-label="Layer Level value">-9.0 dB</span></div>
+    <div class="slider-track" role="slider" aria-label="Layer Level"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>OFF</span><span>+12 dB</span></div>
+  </div></div><div class="replace-control"><div class="parameter-slider" data-endpoint-id="param9" data-tooltip-param="param9" data-tooltip-title="Replace Amount" data-tooltip="Sets how completely the detected original body is replaced by the generated synth body." data-tooltip-range="0 to 100% · Default: 50%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.50000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.50000">
+    <div class="slider-head"><label>Replace Amount</label><span class="slider-value" role="textbox" aria-label="Replace Amount value">50%</span></div>
+    <div class="slider-track" role="slider" aria-label="Replace Amount"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>ORIGINAL</span><span>REPLACED</span></div>
+  </div></div><div class="parameter-slider" data-endpoint-id="param28" data-tooltip-param="param28" data-tooltip-title="Follow" data-tooltip="Sets how closely the generated synth layers follow the original hit&#39;s envelope and dynamics." data-tooltip-range="0 to 100% · Default: 80%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.80000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.80000">
+    <div class="slider-head"><label>Follow</label><span class="slider-value" role="textbox" aria-label="Follow value">80%</span></div>
+    <div class="slider-track" role="slider" aria-label="Follow"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>LOOSE</span><span>TIGHT</span></div>
+  </div><div class="parameter-slider" data-endpoint-id="param27" data-tooltip-param="param27" data-tooltip-title="Synth Length" data-tooltip="Scales the overall duration of the generated synth layers relative to the detected hit." data-tooltip-range="0.25× to 2.00× · Default: 1.00×" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.42857;--zero:0.00000;--fill-start:0.00000;--fill-size:0.42857">
+    <div class="slider-head"><label>Length</label><span class="slider-value" role="textbox" aria-label="Length value">1.00x</span></div>
+    <div class="slider-track" role="slider" aria-label="Length"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>SHORT</span><span>LONG</span></div>
+  </div><div class="parameter-slider" data-endpoint-id="param29" data-tooltip-param="param29" data-tooltip-title="Drive" data-tooltip="Adds saturation and density to the generated synth layers; lower values stay cleaner." data-tooltip-range="0 to 100% · Default: 10%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.10000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.10000">
+    <div class="slider-head"><label>Drive</label><span class="slider-value" role="textbox" aria-label="Drive value">10%</span></div>
+    <div class="slider-track" role="slider" aria-label="Drive"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>CLEAN</span><span>DENSE</span></div>
+  </div></div>
+    <div class="synth-mixer">
+      <div class="synth-channel"><button class="channel-select selected" data-channel="body" aria-pressed="true" data-tooltip-control="inspect-body" data-tooltip-title="Body Details" data-tooltip="Selects the Body channel so its Character and Sub controls appear in the detail inspector." data-tooltip-range="Inspector: Body" data-tooltip-usage="Click to select this channel&#39;s detail controls.">BODY</button><button class="toggle on" data-endpoint-id="param31" data-tooltip-param="param31" data-tooltip-title="Body Power" data-tooltip="Turns the generated Body channel on or off." data-tooltip-range="Off · On · Default: On" data-tooltip-usage="Click to toggle." aria-pressed="true"><span>POWER</span><b class="toggle-state">ON</b></button><div class="parameter-slider" data-endpoint-id="param19" data-tooltip-param="param19" data-tooltip-title="Body Level" data-tooltip="Sets the level of the generated Body channel." data-tooltip-range="0 to 100% · Default: 55%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.55000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.55000">
+    <div class="slider-head"><label>Level</label><span class="slider-value" role="textbox" aria-label="Level value">55%</span></div>
+    <div class="slider-track" role="slider" aria-label="Level"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>0</span><span>100</span></div>
+  </div></div>
+      <div class="synth-channel disabled"><button class="channel-select" data-channel="noise" aria-pressed="false" data-tooltip-control="inspect-noise" data-tooltip-title="Noise Details" data-tooltip="Selects the Noise channel so its Color and Decay controls appear in the detail inspector." data-tooltip-range="Inspector: Noise" data-tooltip-usage="Click to select this channel&#39;s detail controls.">NOISE</button><button class="toggle" data-endpoint-id="param32" data-tooltip-param="param32" data-tooltip-title="Noise Power" data-tooltip="Turns the generated Noise channel on or off." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Click to toggle." aria-pressed="false"><span>POWER</span><b class="toggle-state">OFF</b></button><div class="parameter-slider" data-endpoint-id="param22" data-tooltip-param="param22" data-tooltip-title="Noise Level" data-tooltip="Sets the level of the generated Noise channel." data-tooltip-range="0 to 100% · Default: 25%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.25000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.25000">
+    <div class="slider-head"><label>Level</label><span class="slider-value" role="textbox" aria-label="Level value">25%</span></div>
+    <div class="slider-track" role="slider" aria-label="Level"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>0</span><span>100</span></div>
+  </div></div>
+      <div class="synth-channel disabled"><button class="channel-select" data-channel="exciter" aria-pressed="false" data-tooltip-control="inspect-exciter" data-tooltip-title="Exciter Details" data-tooltip="Selects the Exciter channel so its Tone control appears in the detail inspector." data-tooltip-range="Inspector: Exciter" data-tooltip-usage="Click to select this channel&#39;s detail controls.">EXCITER</button><button class="toggle" data-endpoint-id="param33" data-tooltip-param="param33" data-tooltip-title="Exciter Power" data-tooltip="Turns the generated Exciter channel on or off." data-tooltip-range="Off · On · Default: Off" data-tooltip-usage="Click to toggle." aria-pressed="false"><span>POWER</span><b class="toggle-state">OFF</b></button><div class="parameter-slider" data-endpoint-id="param25" data-tooltip-param="param25" data-tooltip-title="Exciter Level" data-tooltip="Sets the level of the generated Exciter channel." data-tooltip-range="0 to 100% · Default: 12%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.12000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.12000">
+    <div class="slider-head"><label>Level</label><span class="slider-value" role="textbox" aria-label="Level value">12%</span></div>
+    <div class="slider-track" role="slider" aria-label="Level"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>0</span><span>100</span></div>
+  </div></div>
+    </div>
+    <div class="synth-inspector body-detail"><strong>BODY DETAIL</strong><div class="parameter-slider" data-endpoint-id="param20" data-tooltip-param="param20" data-tooltip-title="Body Character" data-tooltip="Shapes the generated body from pure and focused toward richer and more complex." data-tooltip-range="0 to 100% · Default: 35%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.35000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.35000">
+    <div class="slider-head"><label>Character</label><span class="slider-value" role="textbox" aria-label="Character value">35%</span></div>
+    <div class="slider-track" role="slider" aria-label="Character"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>PURE</span><span>RICH</span></div>
+  </div><div class="parameter-slider" data-endpoint-id="param21" data-tooltip-param="param21" data-tooltip-title="Sub" data-tooltip="Adds low-frequency depth to the generated Body channel." data-tooltip-range="0 to 100% · Default: 15%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.15000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.15000">
+    <div class="slider-head"><label>Sub</label><span class="slider-value" role="textbox" aria-label="Sub value">15%</span></div>
+    <div class="slider-track" role="slider" aria-label="Sub"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>LEAN</span><span>DEEP</span></div>
+  </div></div>
+    <div class="synth-inspector noise-detail"><strong>NOISE DETAIL</strong><div class="parameter-slider" data-endpoint-id="param23" data-tooltip-param="param23" data-tooltip-title="Noise Color" data-tooltip="Moves the generated Noise channel&#39;s tonal color from dark to bright." data-tooltip-range="0 to 100% · Default: 55%" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.55000;--zero:0.00000;--fill-start:0.00000;--fill-size:0.55000">
+    <div class="slider-head"><label>Color</label><span class="slider-value" role="textbox" aria-label="Color value">55%</span></div>
+    <div class="slider-track" role="slider" aria-label="Color"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>DARK</span><span>BRIGHT</span></div>
+  </div><div class="parameter-slider" data-endpoint-id="param24" data-tooltip-param="param24" data-tooltip-title="Noise Decay" data-tooltip="Sets how long the generated Noise channel rings out after each hit." data-tooltip-range="20 to 600 ms · Default: 120 ms" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.52680;--zero:0.00000;--fill-start:0.00000;--fill-size:0.52680">
+    <div class="slider-head"><label>Decay</label><span class="slider-value" role="textbox" aria-label="Decay value">120 ms</span></div>
+    <div class="slider-track" role="slider" aria-label="Decay"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>SHORT</span><span>LONG</span></div>
+  </div></div>
+    <div class="synth-inspector exciter-detail"><strong>EXCITER DETAIL</strong><div class="parameter-slider" data-endpoint-id="param26" data-tooltip-param="param26" data-tooltip-title="Exciter Tone" data-tooltip="Sets the tonal frequency focus of the generated Exciter channel." data-tooltip-range="500 Hz to 8.0 kHz · Default: 2.8 kHz" data-tooltip-usage="Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets." style="--norm:0.62136;--zero:0.00000;--fill-start:0.00000;--fill-size:0.62136">
+    <div class="slider-head"><label>Tone</label><span class="slider-value" role="textbox" aria-label="Tone value">2.8 kHz</span></div>
+    <div class="slider-track" role="slider" aria-label="Tone"><i class="slider-rail"></i><i class="slider-fill"></i><i class="slider-zero"></i><i class="slider-thumb"></i></div>
+    <div class="slider-scale" aria-hidden="true"><span>LOW</span><span>HIGH</span></div>
+  </div></div>
+  </aside>
+
+  <div class="parameter-help-bank"><span id="parameter-help-param1">Original / Effect. Switches between the processed signal and the untouched input for an instant A/B comparison. Effect · Original (bypass) · Default: Effect Choose a mode.</span><span id="parameter-help-param2">Synthesis Routing. Sets the optional synthesis path: Off disables it, Layer adds a generated body, and Replace substitutes the detected body. Off · Layer · Replace · Default: Off Choose a routing mode.</span><span id="parameter-help-param3">Tune. Shifts only the selected body resonance by up to one octave while the transient and remaining spectrum stay untouched. −1200 to +1200 ct · Default: 0 ct Drag vertically · Shift for fine control · Double-click resets · Click the value to type.</span><span id="parameter-help-param4">Focus. Sets the center frequency of the body resonance that is detected, auditioned, and tuned. 35 Hz to 4.0 kHz · Default: 196 Hz Drag the band or choose a resonance suggestion · Click the frequency to type.</span><span id="parameter-help-param5">Width. Sets the processed bandwidth around Focus; narrow isolates precisely, while wide includes more of the drum body. 0.17 to 2.00 oct · Default: 0.75 oct Drag either band edge · Click the value to type.</span><span id="parameter-help-param6">Threshold. Sets the input level above which a drum hit is detected and body processing is triggered. −70 to 0 dBFS · Default: −48 dBFS Drag vertically · Arrow keys adjust · Shift for fine control.</span><span id="parameter-help-param7">Speed. Sets the pitch-shift time constant; lower values react faster, while higher values sound smoother. 15 to 50 ms · Default: 20 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param8">Body Decay. Shortens or lengthens only the shifted body tail; zero preserves its original duration. −100 to +100% · Default: 0% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param9">Replace Amount. Sets how completely the detected original body is replaced by the generated synth body. 0 to 100% · Default: 50% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param10">Shift Trim. Raises or lowers only the shifted body level without changing the rest of the signal. −6.0 to +6.0 dB · Default: 0.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param11">Auto Gain. Compensates processing-related level changes so Original and Effect remain easier to compare fairly. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param12">Output. Controls only the plug-in&#39;s final output level. −24.0 to +12.0 dB · Default: 0.0 dB Drag vertically · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param13">Contour. Chooses whether the detector contour follows the selected body range or stays locked at its current position. Relative · Lock · Default: Relative Choose a contour mode.</span><span id="parameter-help-param14">Contour Strength. Sets how strongly the selected contour shapes resonance selection, from subtle to firm. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param15">Resonances Shown. Sets how many detected resonance candidates are displayed for selection in the Body Map. 1 to 4 · Default: 2 Choose the number of suggestions.</span><span id="parameter-help-param16">Snap. Quantizes the shifted body resonance to the nearest equal-tempered semitone. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param17">Stereo Analysis. Linked analyzes both channels together; Dual analyzes the left and right channels independently. Linked · Dual · Default: Linked Choose an analysis mode.</span><span id="parameter-help-param18">Body Solo. Auditions only the selected body range so the detected resonance can be verified by ear. Off · On · Default: Off Hold Body Solo for momentary audition · Click PIN to keep it active.</span><span id="parameter-help-param19">Body Level. Sets the level of the generated Body channel. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param20">Body Character. Shapes the generated body from pure and focused toward richer and more complex. 0 to 100% · Default: 35% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param21">Sub. Adds low-frequency depth to the generated Body channel. 0 to 100% · Default: 15% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param22">Noise Level. Sets the level of the generated Noise channel. 0 to 100% · Default: 25% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param23">Noise Color. Moves the generated Noise channel&#39;s tonal color from dark to bright. 0 to 100% · Default: 55% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param24">Noise Decay. Sets how long the generated Noise channel rings out after each hit. 20 to 600 ms · Default: 120 ms Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param25">Exciter Level. Sets the level of the generated Exciter channel. 0 to 100% · Default: 12% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param26">Exciter Tone. Sets the tonal frequency focus of the generated Exciter channel. 500 Hz to 8.0 kHz · Default: 2.8 kHz Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param27">Synth Length. Scales the overall duration of the generated synth layers relative to the detected hit. 0.25× to 2.00× · Default: 1.00× Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param28">Follow. Sets how closely the generated synth layers follow the original hit&#39;s envelope and dynamics. 0 to 100% · Default: 80% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param29">Drive. Adds saturation and density to the generated synth layers; lower values stay cleaner. 0 to 100% · Default: 10% Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param30">Layer Level. Sets the level of the generated synthesis added in Layer mode. −60.0 to +12.0 dB · Default: −9.0 dB Drag horizontally · Arrow keys adjust · Shift for fine control · Double-click resets.</span><span id="parameter-help-param31">Body Power. Turns the generated Body channel on or off. Off · On · Default: On Click to toggle.</span><span id="parameter-help-param32">Noise Power. Turns the generated Noise channel on or off. Off · On · Default: Off Click to toggle.</span><span id="parameter-help-param33">Exciter Power. Turns the generated Exciter channel on or off. Off · On · Default: Off Click to toggle.</span><span id="control-help-detector">Detector. Opens correction tools for difficult or ambiguous body detection without moving the permanent Tune control. Panel: Closed · Open · Default: Closed Click to open or close the Detector panel.</span><span id="control-help-body-layer">Body Layer. Opens the reserved Layer and Replace controls. Their audio engine is planned and is not active in this build. Panel: Closed · Open · Default: Closed Click to inspect or close the Body Layer panel.</span><span id="control-help-help">Interface Help. Shows or hides the contextual help bubbles for every parameter and button in the interface. Off · On · Default: On Click or press Enter or Space to toggle visual help.</span><span id="control-help-peak-reset">Output Peak. Displays the highest recent output level and clears the held peak without changing Output gain. Readout: −70 to 0 dBFS Click to reset the held output peak.</span><span id="control-help-close-detector">Close Detector. Closes the Detector panel and returns to the unchanged main retuning surface. Action: Close panel Click or press Enter or Space.</span><span id="control-help-refine">Refine Detection. Listens to the next clean drum hit and refreshes the detected body frequency. States: Ready · Listening · Locked · No Lock Click, then play one clean hit above Threshold.</span><span id="control-help-close-body-layer">Close Body Layer. Closes the Body Layer panel and returns to the permanent retuning controls. Action: Close panel Click or press Enter or Space.</span><span id="control-help-inspect-body">Body Details. Selects the Body channel so its Character and Sub controls appear in the detail inspector. Inspector: Body Click to select this channel&#39;s detail controls.</span><span id="control-help-inspect-noise">Noise Details. Selects the Noise channel so its Color and Decay controls appear in the detail inspector. Inspector: Noise Click to select this channel&#39;s detail controls.</span><span id="control-help-inspect-exciter">Exciter Details. Selects the Exciter channel so its Tone control appears in the detail inspector. Inspector: Exciter Click to select this channel&#39;s detail controls.</span></div>
+  <div class="parameter-tooltip" role="tooltip" aria-hidden="true" data-open="false" data-placement="above">
+    <span class="tooltip-kicker">PARAMETER HELP</span>
+    <strong class="tooltip-title"></strong>
+    <p class="tooltip-description"></p>
+    <span class="tooltip-range"></span>
+    <span class="tooltip-usage"></span>
+  </div>
+</div></bodify-ui>
+  <div id="preview-build" aria-label="Preview build b315dc8b4b55">BUILD b315dc8b4b55</div>
+  <div id="preview-error" role="alert"></div>
+  <script>
+    window.addEventListener("error", event => {
+      document.body.classList.add("preview-error");
+      document.getElementById("preview-error").textContent = "Preview error: " + (event.message || "unknown error");
+    });
+  </script>
+  <script>
 // BODIFY — studio-first drum body retuner UI for Amorph.
 // WINDOW SIZE: 1280x760
 // Responsive down to the supported compact host size of 766x455.
@@ -3189,6 +4737,38 @@ class BodifyUI extends HTMLElement {
 const TAG = "bodify-ui";
 if (!customElements.get(TAG)) customElements.define(TAG, BodifyUI);
 
-export default function createPatchView(patchConnection) {
+function createPatchView(patchConnection) {
   return new BodifyUI(patchConnection);
 }
+
+
+const previewValues = {
+  param1: 0, param2: 0, param3: -300, param4: 196, param5: .75, param6: -48,
+  param7: 20, param8: 0, param9: .5, param10: 0, param11: 1, param12: 0,
+  param13: 0, param14: .35, param15: 2, param16: 0, param17: 0, param18: 0,
+  param19: .55, param20: .35, param21: .15, param22: .25, param23: .55,
+  param24: 120, param25: .12, param26: 2800, param27: 1, param28: .8,
+  param29: .1, param30: -9, param31: 1, param32: 0, param33: 0
+};
+const previewListeners = new Set();
+const previewConnection = {
+  addAllParameterListener(fn) { previewListeners.add(fn); },
+  removeAllParameterListener(fn) { previewListeners.delete(fn); },
+  requestParameterValue(id) {
+    queueMicrotask(() => previewListeners.forEach(fn => fn({ endpointID: id, value: previewValues[id] })));
+  },
+  sendEventOrValue(id, value) {
+    previewValues[id] = value;
+    queueMicrotask(() => previewListeners.forEach(fn => fn({ endpointID: id, value })));
+  },
+  sendParameterGestureStart() {},
+  sendParameterGestureEnd() {}
+};
+const previewView = document.getElementById("preview-view");
+previewView.pc = previewConnection;
+previewView._wireBridge?.();
+document.body.classList.add("preview-ready");
+
+  </script>
+</body>
+</html>
