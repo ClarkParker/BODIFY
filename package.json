@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "lab:render": "node tools/render_material_lab.mjs",
     "preview:build": "node tools/build_preview.mjs",
     "preview:render": "node tools/build_preview.mjs && node tools/render_preview.mjs",
     "preview:matrix": "node tools/build_preview.mjs && node tools/render_matrix.mjs",

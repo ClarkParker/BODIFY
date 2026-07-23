@@ -18,8 +18,10 @@ the later phase-coherent Studio engine or the planned Body/Noise/Exciter layers.
 - `BodifyDSP.cmajor` — Cmajor processor and stable parameter contract
 - `BodifyUI.js` — self-contained Amorph Web Component
 - `preview.html` — generated, self-contained browser preview with a mock patch connection
+- `material-lab/` — isolated interactive A/B study for premium controls and materials
 - `tools/build_preview.mjs` — rebuilds the standalone preview from `BodifyUI.js`
 - `tools/render_preview.mjs` — renders and smoke-tests the real interactive UI
+- `tools/render_material_lab.mjs` — verifies and captures the interactive material study
 - `tools/check_contract.mjs` — verifies the frozen parameter and telemetry contract
 - `tests/BodifyCore.cmajtest` — Cmajor math and stability tests
 - `tests/BodifyAudio.cmajtest` — deterministic audio Golden File regression tests
@@ -107,6 +109,20 @@ npm run preview:matrix
 The audio suite checks a neutral-path residual tolerance and verifies that a
 +1200-cent event moves the dominant 196 Hz fixture body toward 392 Hz. Generated
 input/event fixtures and Golden Files are committed together with the DSP revision.
+
+## Material Lab
+
+The standalone Material Lab compares the **Obsidian Titanium** and **Black Nickel**
+directions using identical geometry. It includes a working Tune hero knob, secondary
+knob, latching button, mechanical toggle, and smoked analyzer/chassis sample. It does
+not modify or replace the current plug-in interface.
+
+```sh
+npm run lab:render
+```
+
+The design contract and approval gate are documented in
+`docs/MATERIAL_LAB_SPEC.md`.
 
 ## Current UI states
 

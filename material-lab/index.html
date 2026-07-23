@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>BODIFY Material Lab 0.1</title>
+  <link rel="stylesheet" href="./material-lab.css">
+</head>
+<body>
+  <main class="viewport" data-theme="titanium" data-light="studio">
+    <section class="lab" aria-label="BODIFY premium material comparison">
+      <header class="lab-header">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">B</span>
+          <span>
+            <b>BODIFY</b>
+            <small>MATERIAL LAB · 01</small>
+          </span>
+        </div>
+
+        <div class="comparison" aria-label="Material direction">
+          <span class="toolbar-label">MATERIAL</span>
+          <div class="segmented" role="group" aria-label="Material direction">
+            <button class="selected" type="button" data-theme-select="titanium" aria-pressed="true">
+              A <span>OBSIDIAN TITANIUM</span>
+            </button>
+            <button type="button" data-theme-select="nickel" aria-pressed="false">
+              B <span>BLACK NICKEL</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="utility-button" type="button" data-light-toggle aria-pressed="true">
+            <span>LIGHT</span>
+            <b>STUDIO</b>
+          </button>
+          <button class="utility-button reset-button" type="button" data-reset>
+            <span>CONTROL</span>
+            <b>RESET</b>
+          </button>
+        </div>
+      </header>
+
+      <div class="instrument" data-light-surface>
+        <div class="instrument-edge" aria-hidden="true"></div>
+        <span class="fastener fastener-one" aria-hidden="true"></span>
+        <span class="fastener fastener-two" aria-hidden="true"></span>
+        <span class="fastener fastener-three" aria-hidden="true"></span>
+        <span class="fastener fastener-four" aria-hidden="true"></span>
+
+        <section class="material-story" aria-labelledby="direction-title">
+          <div class="eyebrow"><i></i> MATERIAL DIRECTION <span data-direction-letter>A</span></div>
+          <h1 id="direction-title" data-direction-name>Obsidian Titanium</h1>
+          <p data-direction-copy>
+            Quiet technical luxury: bead-blasted graphite, cool satin titanium and
+            restrained cyan energy.
+          </p>
+
+          <div class="recipe" aria-label="Material recipe">
+            <div>
+              <span>CHASSIS</span>
+              <b data-recipe-chassis>Bead-blasted graphite</b>
+            </div>
+            <div>
+              <span>HERO CONTROL</span>
+              <b data-recipe-control>Satin titanium</b>
+            </div>
+            <div>
+              <span>ACCENT</span>
+              <b data-recipe-accent>Cold cyan emission</b>
+            </div>
+          </div>
+
+          <div class="analyzer-cutout" aria-label="Smoked analyzer glass material sample">
+            <div class="analyzer-head">
+              <span>BODY MAP</span>
+              <b>196.0 <small>Hz</small></b>
+              <span>LOCKED</span>
+            </div>
+            <div class="analyzer-field">
+              <span class="source-tag">SOURCE</span>
+              <span class="target-tag">TARGET</span>
+              <svg viewBox="0 0 460 136" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                  <linearGradient id="bodyFill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="var(--accent)" stop-opacity=".26"/>
+                    <stop offset=".82" stop-color="var(--accent)" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path class="analyzer-fill" d="M0 121 C32 118 53 112 72 105 C93 97 111 103 129 98 C148 92 153 48 176 39 C194 32 201 74 220 82 C239 91 252 90 269 85 C289 79 303 55 323 49 C341 44 347 77 366 87 C390 101 416 109 460 112 L460 136 L0 136 Z"/>
+                <path class="analyzer-trace" d="M0 121 C32 118 53 112 72 105 C93 97 111 103 129 98 C148 92 153 48 176 39 C194 32 201 74 220 82 C239 91 252 90 269 85 C289 79 303 55 323 49 C341 44 347 77 366 87 C390 101 416 109 460 112"/>
+                <line class="source-line" x1="176" y1="18" x2="176" y2="126"/>
+                <line class="target-line" x1="323" y1="24" x2="323" y2="126"/>
+              </svg>
+              <div class="glass-glint" aria-hidden="true"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="control-deck" aria-label="Interactive premium control samples">
+          <div class="deck-label">
+            <span>TACTILE CONTROL SET</span>
+            <b>DRAG · WHEEL · ARROWS · DOUBLE-CLICK RESET</b>
+          </div>
+
+          <div class="control-grid">
+            <article class="hero-control">
+              <div class="control-heading">
+                <span>TUNE</span>
+                <b>PRIMARY CONTROL</b>
+              </div>
+              <div class="knob-stage hero-stage">
+                <div class="scale-ring" aria-hidden="true"></div>
+                <span class="scale-label scale-min">−12</span>
+                <span class="scale-label scale-zero">0</span>
+                <span class="scale-label scale-max">+12</span>
+                <button
+                  class="knob hero-knob"
+                  type="button"
+                  role="slider"
+                  data-knob="tune"
+                  data-min="-1200"
+                  data-max="1200"
+                  data-step="1"
+                  data-default="0"
+                  aria-label="Tune"
+                  aria-valuemin="-1200"
+                  aria-valuemax="1200"
+                  aria-valuenow="0"
+                >
+                  <span class="knob-well" aria-hidden="true"></span>
+                  <span class="knob-body" aria-hidden="true">
+                    <i class="knob-indicator"></i>
+                    <i class="knob-specular"></i>
+                  </span>
+                </button>
+              </div>
+              <output class="value-display" data-output="tune">0 <small>ct</small></output>
+            </article>
+
+            <div class="secondary-stack">
+              <article class="secondary-control">
+                <div class="control-heading compact-heading">
+                  <span>SPEED</span>
+                  <b>SECONDARY</b>
+                </div>
+                <div class="secondary-row">
+                  <button
+                    class="knob secondary-knob"
+                    type="button"
+                    role="slider"
+                    data-knob="speed"
+                    data-min="15"
+                    data-max="50"
+                    data-step=".1"
+                    data-default="30"
+                    aria-label="Speed"
+                    aria-valuemin="15"
+                    aria-valuemax="50"
+                    aria-valuenow="30"
+                  >
+                    <span class="knob-well" aria-hidden="true"></span>
+                    <span class="knob-body" aria-hidden="true">
+                      <i class="knob-indicator"></i>
+                      <i class="knob-specular"></i>
+                    </span>
+                  </button>
+                  <output class="compact-value" data-output="speed">30.0 <small>ms</small></output>
+                </div>
+              </article>
+
+              <article class="button-control">
+                <div class="control-heading compact-heading">
+                  <span>BUTTON</span>
+                  <b>LATCHING</b>
+                </div>
+                <button class="tactile-button" type="button" data-latch aria-pressed="false">
+                  <i aria-hidden="true"></i>
+                  <span>BODY SOLO</span>
+                  <b data-latch-state>OFF</b>
+                </button>
+              </article>
+
+              <article class="toggle-control">
+                <div class="control-heading compact-heading">
+                  <span>TOGGLE</span>
+                  <b>MECHANICAL</b>
+                </div>
+                <button class="mechanical-toggle" type="button" data-toggle aria-pressed="true">
+                  <span class="toggle-track" aria-hidden="true"><i></i></span>
+                  <span>SNAP</span>
+                  <b data-toggle-state>ON</b>
+                </button>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <footer class="instrument-footer">
+          <span><i class="legend-bevel"></i> MICRO BEVEL</span>
+          <span><i class="legend-roughness"></i> ROUGHNESS</span>
+          <span><i class="legend-shadow"></i> CONTACT SHADOW</span>
+          <span><i class="legend-state"></i> MECHANICAL STATE</span>
+          <b data-direction-code>A / OT–01</b>
+        </footer>
+      </div>
+    </section>
+  </main>
+  <script src="./material-lab.js"></script>
+</body>
+</html>
