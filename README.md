@@ -8,7 +8,7 @@ single rotary hero control, and Speed, Shift Trim, and Body Decay are large line
 work controls. Detector correction and future Body Layer/Replace processing live in
 optional drawers and do not occupy the normal working surface.
 
-Version 0.2.1 is the current M1 maintenance checkpoint. The 0.2.0 audio core
+Version 0.2.2 is the current M1 maintenance checkpoint. The 0.2.0 audio core
 implements the zero-latency modal retuner and real DSP telemetry; it does not claim
 the later phase-coherent Studio engine or the planned Body/Noise/Exciter layers.
 
@@ -75,8 +75,11 @@ Input meter. Body, Noise, and Exciter remain reserved as future channel strips; 
 their audio engine exists they are visibly unavailable outside Preview mode. Their
 secondary parameters open in a contextual inspector. All 33 Cmajor parameters have
 exactly one rendered UI endpoint. Every endpoint also has a unified tooltip with its
-purpose, range or choices, default value, and editing gesture. The same help opens on
-pointer hover and keyboard focus and remains within the plug-in bounds. Every action
+purpose, range or choices, default value, and editing gesture. The visible bubble is
+an English purpose-and-range summary; the full editing gesture remains in the
+keyboard-linked accessible description. Pointer help opens after 650 ms, switches
+between nearby controls after 130 ms, closes during adjustment, and remains within
+the plug-in bounds. Keyboard-focus help remains immediate. Every action
 button uses the same contextual help system, including panels, Refine, peak reset,
 channel inspectors, close actions, and the help switch itself. A compact
 `?` header control hides or restores all visual help bubbles without

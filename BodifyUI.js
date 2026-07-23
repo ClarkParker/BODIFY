@@ -7,6 +7,9 @@ const CHASSIS_H = 760;
 const COMPACT_W = 766;
 const COMPACT_H = 455;
 const TOOLTIP_PREFERENCE_KEY = "bodify.ui.tooltips.enabled.v1";
+const TOOLTIP_INITIAL_DELAY_MS = 650;
+const TOOLTIP_SWITCH_DELAY_MS = 130;
+const TOOLTIP_WARM_WINDOW_MS = 900;
 
 const PARAMS = [
   { id: "param1",  label: "Bypass",           min: 0,     max: 1,    init: 0,    step: 1 },
@@ -487,6 +490,8 @@ class BodifyUI extends HTMLElement {
     this._learnTimer = 0;
     this._peakIndex = 1;
     this._tooltipsEnabled = this._readTooltipPreference(true);
+    this._tooltipWarmUntil = 0;
+    this._tooltipPointerActive = null;
   }
 
   connectedCallback() {
@@ -1008,6 +1013,8 @@ class BodifyUI extends HTMLElement {
       this._tooltipHover = null;
       this._tooltipFocus = null;
       this._tooltipSuppressed = null;
+      this._tooltipPointerActive = null;
+      this._tooltipWarmUntil = 0;
       this._hideParameterTooltip();
     }
     if (persist) this._storeTooltipPreference(this._tooltipsEnabled);
@@ -1065,7 +1072,11 @@ class BodifyUI extends HTMLElement {
         ...current,
         point: { x: event.clientX, y: event.clientY },
       };
-      if (!this._tooltipFocus) this._queueParameterTooltip(this._tooltipHover, 220);
+      const tooltipIsOpen = this._tooltip.dataset.open === "true";
+      const delay = tooltipIsOpen || this._tooltipNow() < this._tooltipWarmUntil
+        ? TOOLTIP_SWITCH_DELAY_MS
+        : TOOLTIP_INITIAL_DELAY_MS;
+      if (!this._tooltipFocus) this._queueParameterTooltip(this._tooltipHover, delay);
     };
     this._tooltipPointerMove = event => {
       if (!this._tooltipsEnabled) return;
@@ -1084,12 +1095,17 @@ class BodifyUI extends HTMLElement {
       if (this._tooltipHover?.id === current.id) this._tooltipHover = null;
       if (this._tooltipSuppressed === current.id) this._tooltipSuppressed = null;
       clearTimeout(this._tooltipTimer);
-      if (!this._tooltipFocus) this._hideParameterTooltip();
+      if (!this._tooltipFocus) {
+        if (this._tooltip.dataset.open === "true")
+          this._tooltipWarmUntil = this._tooltipNow() + TOOLTIP_WARM_WINDOW_MS;
+        this._hideParameterTooltip();
+      }
     };
     this._tooltipFocusIn = event => {
       if (!this._tooltipsEnabled) return;
       const current = this._resolveTooltipTarget(event.target);
       if (!current) return;
+      if (this._tooltipPointerActive === current.id || this._tooltipSuppressed === current.id) return;
       this._tooltipSuppressed = null;
       this._tooltipFocus = { ...current, trigger: event.target, point: null };
       this._queueParameterTooltip(this._tooltipFocus, 0);
@@ -1118,10 +1134,25 @@ class BodifyUI extends HTMLElement {
       clearTimeout(this._tooltipTimer);
       this._hideParameterTooltip();
     };
+    this._tooltipPointerDown = event => {
+      if (!this._tooltipsEnabled) return;
+      const current = this._resolveTooltipTarget(event.target);
+      if (!current) return;
+      this._tooltipPointerActive = current.id;
+      this._tooltipSuppressed = current.id;
+      clearTimeout(this._tooltipTimer);
+      this._hideParameterTooltip();
+    };
+    this._tooltipPointerFinish = () => {
+      this._tooltipPointerActive = null;
+    };
 
     this.addEventListener("pointerover", this._tooltipPointerOver);
     this.addEventListener("pointermove", this._tooltipPointerMove);
     this.addEventListener("pointerout", this._tooltipPointerOut);
+    this.addEventListener("pointerdown", this._tooltipPointerDown, true);
+    this.addEventListener("pointerup", this._tooltipPointerFinish, true);
+    this.addEventListener("pointercancel", this._tooltipPointerFinish, true);
     this.addEventListener("focusin", this._tooltipFocusIn);
     this.addEventListener("focusout", this._tooltipFocusOut);
     this.addEventListener("keydown", this._tooltipKeyDown);
@@ -1135,6 +1166,10 @@ class BodifyUI extends HTMLElement {
     else show();
   }
 
+  _tooltipNow() {
+    return globalThis.performance?.now?.() ?? Date.now();
+  }
+
   _showParameterTooltip(id, trigger, point) {
     const tooltip = tooltipDefinition(id);
     if (!this._tooltipsEnabled || !tooltip || !this._tooltip || !trigger?.isConnected) return;
@@ -1145,6 +1180,7 @@ class BodifyUI extends HTMLElement {
     this._tooltip.querySelector(".tooltip-usage").textContent = tooltip.usage;
     this._tooltip.dataset.param = id;
     this._tooltip.dataset.open = "true";
+    this._tooltipWarmUntil = this._tooltipNow() + TOOLTIP_WARM_WINDOW_MS;
     this._positionParameterTooltip(trigger, point);
   }
 
@@ -1196,12 +1232,18 @@ class BodifyUI extends HTMLElement {
     if (this._tooltipPointerOver) this.removeEventListener("pointerover", this._tooltipPointerOver);
     if (this._tooltipPointerMove) this.removeEventListener("pointermove", this._tooltipPointerMove);
     if (this._tooltipPointerOut) this.removeEventListener("pointerout", this._tooltipPointerOut);
+    if (this._tooltipPointerDown) this.removeEventListener("pointerdown", this._tooltipPointerDown, true);
+    if (this._tooltipPointerFinish) {
+      this.removeEventListener("pointerup", this._tooltipPointerFinish, true);
+      this.removeEventListener("pointercancel", this._tooltipPointerFinish, true);
+    }
     if (this._tooltipFocusIn) this.removeEventListener("focusin", this._tooltipFocusIn);
     if (this._tooltipFocusOut) this.removeEventListener("focusout", this._tooltipFocusOut);
     if (this._tooltipKeyDown) this.removeEventListener("keydown", this._tooltipKeyDown);
     this._tooltipHover = null;
     this._tooltipFocus = null;
     this._tooltipSuppressed = null;
+    this._tooltipPointerActive = null;
   }
 
   _wireToggles() {
@@ -2817,19 +2859,20 @@ class BodifyUI extends HTMLElement {
     z-index:80;
     left:0;
     top:0;
-    width:min(326px,calc(100% - 18px));
-    padding:13px 14px 12px;
+    width:min(240px,calc(100% - 18px));
+    padding:10px 11px 9px;
     visibility:hidden;
     opacity:0;
     pointer-events:none;
     border:1px solid rgba(121,211,201,.35);
-    border-radius:9px;
+    border-radius:8px;
     background:
-      linear-gradient(180deg,rgba(22,35,40,.99),rgba(10,18,21,.99));
+      linear-gradient(180deg,rgba(22,35,40,.94),rgba(10,18,21,.94));
+    backdrop-filter:blur(7px);
     color:#eaf2f3;
     box-shadow:
       inset 0 1px rgba(255,255,255,.075),
-      0 16px 34px rgba(0,0,0,.62),
+      0 12px 26px rgba(0,0,0,.55),
       0 0 0 1px rgba(0,0,0,.4);
     transform:translateY(4px);
     transform-origin:center top;
@@ -2879,7 +2922,7 @@ class BodifyUI extends HTMLElement {
     letter-spacing:.035em;
   }
   bodify-ui .tooltip-description {
-    margin:5px 0 8px;
+    margin:4px 0 6px;
     color:#b8c6ca;
     font-size:10.5px;
     line-height:1.42;
@@ -2897,8 +2940,7 @@ class BodifyUI extends HTMLElement {
     font-variant-numeric:tabular-nums;
   }
   bodify-ui .tooltip-usage {
-    margin-top:5px;
-    color:#7f9096;
+    display:none;
   }
 
   @media (max-width:960px), (max-height:600px) {
@@ -3033,8 +3075,8 @@ class BodifyUI extends HTMLElement {
     bodify-ui .synth-inspector .slider-track { height:24px; }
     bodify-ui .synth-inspector .slider-scale { display:none; }
     bodify-ui .parameter-tooltip {
-      width:min(286px,calc(100% - 14px));
-      padding:10px 11px 9px;
+      width:min(232px,calc(100% - 14px));
+      padding:9px 10px 8px;
       border-radius:7px;
     }
     bodify-ui .tooltip-description { margin:4px 0 6px; font-size:9.5px; }

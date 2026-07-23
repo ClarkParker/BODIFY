@@ -110,7 +110,7 @@ try {
     await page.waitForFunction(parameterID => {
       const tooltip = document.querySelector(".parameter-tooltip");
       return tooltip?.dataset.open === "true" && tooltip.dataset.param === parameterID;
-    }, id, { timeout: 1200 });
+    }, id, { timeout: 1800 });
     await page.waitForTimeout(110);
     const state = await page.locator(".parameter-tooltip").evaluate(tooltip => {
       const chassis = tooltip.closest(".chassis");
@@ -234,6 +234,56 @@ try {
     await page.evaluate(() => document.activeElement?.blur?.());
   };
   const tooltipIsOpen = () => page.locator(".parameter-tooltip").evaluate(tooltip => tooltip.dataset.open === "true");
+  const assertProfessionalTooltipBehavior = async () => {
+    const speed = page.locator('[data-tooltip-focus="true"][data-tooltip-param="param7"]:visible').first();
+    const trim = page.locator('[data-tooltip-focus="true"][data-tooltip-param="param10"]:visible').first();
+    await page.evaluate(() => {
+      document.activeElement?.blur?.();
+      const view = document.querySelector("bodify-ui");
+      view._tooltipWarmUntil = 0;
+      view._hideParameterTooltip();
+    });
+    await page.mouse.move(viewportWidth / 2, 2);
+
+    const initialStart = Date.now();
+    await speed.hover();
+    await page.waitForTimeout(420);
+    if (await tooltipIsOpen()) throw new Error("Initial pointer tooltip opened before the professional hover delay");
+    await readOpenTooltip("param7");
+    const initialElapsed = Date.now() - initialStart;
+    if (initialElapsed < 580 || initialElapsed > 1500)
+      throw new Error(`Initial pointer tooltip delay is outside the expected range: ${initialElapsed} ms`);
+
+    const switchStart = Date.now();
+    await trim.hover();
+    await page.waitForTimeout(60);
+    if (await page.locator('.parameter-tooltip[data-param="param10"][data-open="true"]').count())
+      throw new Error("Tooltip switching happened without the short handoff delay");
+    await readOpenTooltip("param10");
+    const switchElapsed = Date.now() - switchStart;
+    if (switchElapsed < 100 || switchElapsed > 520)
+      throw new Error(`Pointer tooltip handoff delay is outside the expected range: ${switchElapsed} ms`);
+
+    await speed.hover();
+    await readOpenTooltip("param7");
+    const track = page.locator('.parameter-slider[data-endpoint-id="param7"] .slider-track');
+    const box = await track.boundingBox();
+    if (!box) throw new Error("Speed slider is unavailable for tooltip-drag suppression testing");
+    const before = Number(await track.getAttribute("aria-valuenow"));
+    await page.mouse.move(box.x + box.width * .3, box.y + box.height / 2);
+    await page.mouse.down();
+    if (await tooltipIsOpen()) throw new Error("Tooltip stayed open when parameter adjustment started");
+    await page.mouse.move(box.x + box.width * .78, box.y + box.height / 2, { steps: 4 });
+    await page.waitForTimeout(220);
+    if (await tooltipIsOpen()) throw new Error("Tooltip reopened while a parameter was being adjusted");
+    await page.mouse.up();
+    const after = Number(await track.getAttribute("aria-valuenow"));
+    if (!Number.isFinite(after) || Math.abs(after - before) < .0001)
+      throw new Error(`Tooltip drag suppression blocked Speed editing: ${before} -> ${after}`);
+    await track.dblclick();
+    await page.mouse.move(viewportWidth / 2, 2);
+    await page.waitForFunction(() => document.querySelector(".parameter-tooltip")?.dataset.open === "false", null, { timeout: 800 });
+  };
   const assertTooltipToggle = async () => {
     const toggle = page.locator(".tooltip-toggle");
     if (await toggle.count() !== 1 || !await toggle.isVisible())
@@ -317,12 +367,12 @@ try {
       throw new Error("Escape changed the global tooltip preference");
     await page.waitForFunction(() => document.querySelector(".parameter-tooltip")?.dataset.open === "false");
 
-    // A pending 220 ms hover must not fire after the user disables help.
+    // A pending 650 ms first hover must not fire after the user disables help.
     await page.evaluate(() => document.activeElement?.blur?.());
     await page.mouse.move(viewportWidth / 2, 2);
     await speed.hover();
     await toggle.evaluate(button => button.click());
-    await page.waitForTimeout(340);
+    await page.waitForTimeout(760);
     if (await tooltipIsOpen()) throw new Error("A pending tooltip timer survived the OFF action");
 
     const stored = await page.evaluate(() => {
@@ -400,6 +450,7 @@ try {
   }));
   if (Math.abs(chassisScroll.left) > 1 || Math.abs(chassisScroll.top) > 1)
     throw new Error(`Plug-in chassis became internally scrolled: ${JSON.stringify(chassisScroll)}`);
+  if (!requestedTooltipID) await assertProfessionalTooltipBehavior();
   await assertTooltipToggle();
   for (const id of ["param1", "param4", "param5", "param6", "param7", "param12", "param18"])
     await assertParameterTooltip(id);

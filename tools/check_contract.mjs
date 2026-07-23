@@ -50,7 +50,7 @@ if (!/input\s+event\s+float\s+refineRequest\s*;/.test(dsp)
 if (manifest.source !== "BodifyDSP.cmajor" || manifest.view?.src !== "BodifyUI.js") {
   throw new Error("Manifest source/view contract changed unexpectedly");
 }
-if (manifest.version !== "0.2.1") throw new Error("M1 maintenance manifest version must be 0.2.1");
+if (manifest.version !== "0.2.2") throw new Error("M1 maintenance manifest version must be 0.2.2");
 if (/phase[- ]coherent/i.test(manifest.description)) {
   throw new Error("Zero-latency M1 must not claim phase coherence");
 }

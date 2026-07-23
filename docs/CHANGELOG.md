@@ -1,5 +1,18 @@
 # BODIFY Changelog
 
+## 0.2.2 — Professional tooltip pacing
+
+- Kept all parameter and action help in English while reducing the visible bubble to
+  a compact purpose-and-range summary; full interaction instructions remain in each
+  keyboard-linked accessible description.
+- Added a 650 ms initial pointer-hover delay and a 130 ms handoff when moving directly
+  between controls. Keyboard-focus help remains immediate.
+- Reduced the visual tooltip to a maximum 240 px width with a lightly translucent,
+  blurred surface and softer shadow.
+- Tooltips now close as soon as pointer adjustment begins and remain suppressed while
+  a knob, slider, fader, band, or threshold is being moved.
+- Added timing, handoff, drag-suppression, collision, and accessibility regressions.
+
 ## 0.2.1 — UI help and window-fit maintenance
 
 - Extended contextual help from the 33 parameters to every visible button, including

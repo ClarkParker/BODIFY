@@ -135,10 +135,15 @@ without an explicit signal-flow definition.
 - Every one of the 33 numbered parameters has one authoritative tooltip entry.
 - Every visible button also has authoritative contextual help; action buttons use the
   same hover, keyboard-focus, collision, and accessibility behavior as parameters.
-- Each tooltip states the parameter's purpose, range or choices, default value, and
-  the interaction needed to edit it.
-- Tooltips appear after a short pointer-hover delay and immediately on keyboard
-  focus. Escape dismisses the current tooltip without changing the parameter.
+- All tooltip copy is English. The visible bubble stays concise: title, purpose, and
+  range/default summary. The complete editing gesture remains in the persistent
+  keyboard-linked accessible description.
+- The first pointer tooltip appears after 650 ms. Moving directly between controls
+  uses a 130 ms handoff, while keyboard-focus help remains immediate. Escape dismisses
+  the current tooltip without changing the parameter.
+- The visible bubble is at most 240 px wide with a 94% opaque blurred surface. It is
+  hidden as soon as pointer adjustment starts and remains hidden throughout the
+  gesture so the live control value is never obscured.
 - A compact `?` help control in the header globally shows or suppresses the visual
   bubbles. Help is on by default, an open or pending bubble is
   cancelled immediately when switched off, and the preference is stored locally
@@ -151,7 +156,7 @@ without an explicit signal-flow definition.
 - Focus, Width, direct numeric readouts, segmented choices, power controls, and the
   three synthesis channel levels follow the same help behavior as standard sliders.
 
-## Version 0.2.1 boundaries
+## Version 0.2.2 boundaries
 
 - The standalone browser preview simulates spectrum, meters, confidence, and pitch
   because no Cmajor audio engine exists in that page. The Amorph view receives real
@@ -182,8 +187,8 @@ without an explicit signal-flow definition.
 11. All 33 numbered Cmajor parameters have exactly one rendered UI endpoint; none
     exists only in the registry.
 12. All 33 endpoints contain complete tooltip copy and at least one keyboard-linked
-   help target; representative controls pass hover, focus, dismissal, and collision
-   checks at 1280×760 and 766×455.
+   help target; representative controls pass initial-delay, fast-handoff, focus,
+   dismissal, drag-suppression, and collision checks at 1280×760 and 766×455.
 13. The compact global help switch is visible and keyboard-operable at every supported
     host size. OFF suppresses hover/focus bubbles without changing parameter input,
     endpoint count, or persistent accessible descriptions.
